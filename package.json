@@ -15,6 +15,7 @@
     "@fontsource/roboto": "^5.1.0",
     "@mui/icons-material": "^6.1.8",
     "@mui/material": "^6.1.8",
+    "@turf/turf": "^7.1.0",
     "immutable": "^5.0.3",
     "maplibre-gl": "^4.7.1",
     "react": "^18.3.1",

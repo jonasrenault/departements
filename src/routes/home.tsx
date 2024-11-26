@@ -2,8 +2,8 @@ import Map from '../components/Map'
 
 export default function Home() {
   return (
-    <main style={{ height: '100vh' }}>
+    <div style={{ flexGrow: '1' }}>
       <Map />
-    </main>
+    </div>
   )
 }

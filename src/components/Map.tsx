@@ -1,45 +1,34 @@
-import { fromJS } from 'immutable'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { useEffect, useState } from 'react'
-import { FillLayer, Layer, Source } from 'react-map-gl'
-import { Map as MapGL } from 'react-map-gl/maplibre'
+import { useState } from 'react'
+import { Map as MapGL, FillLayer, Layer, Source } from 'react-map-gl/maplibre'
+import * as turf from '@turf/turf'
+import defaultMapStyle from '../assets/bright.json'
+import metropole from '../assets/metropole.geojson?raw'
 
 const layerStyle: FillLayer = {
-  id: 'data',
+  id: 'overlayL',
+  source: 'overlay',
   type: 'fill',
-  'source-layer': 'data',
   paint: {
     'fill-color': '#3288bd',
-    'fill-opacity': 0.8,
+    'fill-opacity': 1,
   },
 }
+
+const bounds: [[number, number], [number, number]] = [
+  [-15, 38], // Southwest coordinates
+  [20, 53], // Northeast coordinates
+]
+const bboxPoly = turf.bboxPolygon(bounds.flat() as [number, number, number, number])
+const franceOverlay = turf.difference(turf.featureCollection([bboxPoly, JSON.parse(metropole)]))
 
 export default function Map() {
   const [viewState, setViewState] = useState({
     longitude: 3,
     latitude: 46.4,
-    zoom: 5.6,
+    zoom: 0,
   })
-  const [mapStyle, setMapStyle] = useState()
-  const [franceGeo, setFranceGeo] = useState()
-
-  useEffect(() => {
-    const fetchMapStyle = async () => {
-      const response = await fetch(
-        'https://openmaptiles.geo.data.gouv.fr/styles/osm-bright/style.json',
-      )
-      const style = fromJS(await response.json())
-      setMapStyle(style)
-
-      const frResponse = await fetch(
-        'https://openmaptiles.geo.data.gouv.fr/data/france-vector.json',
-      )
-      const frGeo = fromJS(await frResponse.json())
-      setFranceGeo(frGeo)
-    }
-
-    fetchMapStyle()
-  }, [])
+  const [mapStyle, setMapStyle] = useState(defaultMapStyle)
 
   return (
     <MapGL
@@ -47,14 +36,15 @@ export default function Map() {
       onMove={(evt) => setViewState(evt.viewState)}
       mapStyle={mapStyle}
       styleDiffing
+      maxBounds={bounds}
+      minZoom={0}
+      maxZoom={10}
     >
-      <Source
-        type='vector'
-        // data={franceGeo}
-        tiles={['https://openmaptiles.geo.data.gouv.fr/data/france-vector/{z}/{x}/{y}.pbf']}
-      >
-        <Layer {...layerStyle} />
-      </Source>
+      {franceOverlay && (
+        <Source id='overlay' type='geojson' data={franceOverlay}>
+          <Layer {...layerStyle} />
+        </Source>
+      )}
     </MapGL>
   )
 }
