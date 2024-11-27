@@ -1,8 +1,15 @@
 import * as turf from '@turf/turf'
-import { StyleSpecification } from 'maplibre-gl'
+import { FilterSpecification, StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { FillLayer, Layer, Map as MapGL, Popup, Source } from 'react-map-gl/maplibre'
+import {
+  FillLayer,
+  Layer,
+  Map as MapGL,
+  MapLayerMouseEvent,
+  Popup,
+  Source,
+} from 'react-map-gl/maplibre'
 import defaultMapStyle from '../assets/bright.json'
 import departements from '../assets/departements.geojson?raw'
 import metropole from '../assets/metropole.geojson?raw'
@@ -74,6 +81,17 @@ function getMapStyle(visibility: MapVisibility) {
   return { ...defaultMapStyle, layers: layers }
 }
 
+type Departement = {
+  code: string
+  nom: string
+}
+
+type HoverInfo = {
+  longitude: number
+  latitude: number
+  dep?: Departement
+}
+
 export default function FranceMap({ visibility }: MapProps) {
   const [viewState, setViewState] = useState({
     longitude: 3,
@@ -82,19 +100,22 @@ export default function FranceMap({ visibility }: MapProps) {
   })
   const [mapStyle, setMapStyle] = useState(defaultMapStyle as StyleSpecification)
 
-  const [hoverInfo, setHoverInfo] = useState(null)
+  const [hoverInfo, setHoverInfo] = useState<HoverInfo>()
 
-  const onHover = useCallback((event) => {
+  const onHover = useCallback((event: MapLayerMouseEvent) => {
     const dep = event.features && event.features[0]
     setHoverInfo({
       longitude: event.lngLat.lng,
       latitude: event.lngLat.lat,
-      dep: dep && dep.properties,
+      dep: dep && (dep.properties as Departement),
     })
   }, [])
 
   const selectedDep = hoverInfo && hoverInfo.dep
-  const filter = useMemo(() => ['in', 'code', selectedDep ? selectedDep.code : ''], [selectedDep])
+  const filter = useMemo(
+    () => ['in', 'code', selectedDep ? selectedDep.code : ''] as FilterSpecification,
+    [selectedDep],
+  )
 
   useEffect(() => {
     setMapStyle(getMapStyle(visibility) as StyleSpecification)
@@ -115,7 +136,6 @@ export default function FranceMap({ visibility }: MapProps) {
       {franceOverlay && (
         <Source id='overlay' type='geojson' data={franceOverlay}>
           <Layer beforeId='place-town' {...overlayLayer} />
-          {/* <Layer {...overlayLayer} /> */}
         </Source>
       )}
 
@@ -130,7 +150,7 @@ export default function FranceMap({ visibility }: MapProps) {
         <Popup
           longitude={hoverInfo.longitude}
           latitude={hoverInfo.latitude}
-          offset={[0, -10]}
+          offset={[0, -10] as [number, number]}
           closeButton={false}
           className='dep-info'
         >

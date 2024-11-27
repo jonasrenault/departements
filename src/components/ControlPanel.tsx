@@ -12,7 +12,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { useState, MouseEvent, Fragment } from 'react'
+import { Fragment, MouseEvent, useState } from 'react'
 
 export type MapLayer = {
   ids: string[]
