@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf'
+import type { FeatureCollection, Polygon } from 'geojson'
 import { FilterSpecification, StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -11,9 +12,8 @@ import {
   Source,
 } from 'react-map-gl/maplibre'
 import defaultMapStyle from '../assets/bright.json'
-import departements from '../assets/departements.geojson?raw'
 import metropole from '../assets/metropole.geojson?raw'
-import { MapVisibility } from './ControlPanel'
+import { Departement, MapVisibility } from '../types'
 
 // overlay layer masking out everything but france
 const overlayLayer: FillLayer = {
@@ -45,7 +45,19 @@ const highlightedDepartementLayer: FillLayer = {
   paint: {
     'fill-outline-color': '#484896',
     'fill-color': '#455a64',
-    'fill-opacity': 0.75,
+    'fill-opacity': 0.7,
+  },
+}
+
+// highlighted department layer
+const foundDepartementLayer: FillLayer = {
+  id: 'foundDepartementLayer',
+  type: 'fill',
+  source: 'departementsLayer',
+  paint: {
+    'fill-outline-color': '#484896',
+    'fill-color': '#1976d2',
+    'fill-opacity': 0.7,
   },
 }
 
@@ -57,11 +69,6 @@ const maxBounds: [[number, number], [number, number]] = [
 // Compute the difference between the polygon representing the maxBounds and the area of France
 const bboxPoly = turf.bboxPolygon(maxBounds.flat() as [number, number, number, number])
 const franceOverlay = turf.difference(turf.featureCollection([bboxPoly, JSON.parse(metropole)]))
-const departementsOverlay = JSON.parse(departements)
-
-interface MapProps {
-  visibility: MapVisibility
-}
 
 function getMapStyle(visibility: MapVisibility) {
   const visible = new Map()
@@ -81,45 +88,59 @@ function getMapStyle(visibility: MapVisibility) {
   return { ...defaultMapStyle, layers: layers }
 }
 
-type Departement = {
-  code: string
-  nom: string
-}
-
 type HoverInfo = {
   longitude: number
   latitude: number
   dep?: Departement
 }
 
-export default function FranceMap({ visibility }: MapProps) {
+interface MapProps {
+  visibility: MapVisibility
+  onDepartementClick: (dep: Departement) => void
+  deps: FeatureCollection<Polygon, Departement>
+}
+
+export default function FranceMap({ visibility, onDepartementClick, deps }: MapProps) {
   const [viewState, setViewState] = useState({
     longitude: 3,
     latitude: 46.4,
     zoom: 0,
   })
   const [mapStyle, setMapStyle] = useState(defaultMapStyle as StyleSpecification)
-
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>()
+  const [departements, setDepartements] = useState<FeatureCollection<Polygon, Departement>>(deps)
 
   const onHover = useCallback((event: MapLayerMouseEvent) => {
-    const dep = event.features && event.features[0]
+    const feature = event.features && event.features[0]
     setHoverInfo({
       longitude: event.lngLat.lng,
       latitude: event.lngLat.lat,
-      dep: dep && (dep.properties as Departement),
+      dep: feature && (feature.properties as Departement),
     })
   }, [])
 
+  const onClick = useCallback(
+    (event: MapLayerMouseEvent) => {
+      const feature = event.features && event.features[0]
+
+      if (feature) onDepartementClick(feature.properties as Departement)
+    },
+    [onDepartementClick],
+  )
+
   const selectedDep = hoverInfo && hoverInfo.dep
   const filter = useMemo(
-    () => ['in', 'code', selectedDep ? selectedDep.code : ''] as FilterSpecification,
+    () => ['==', 'code', selectedDep ? selectedDep.code : ''] as FilterSpecification,
     [selectedDep],
   )
 
   useEffect(() => {
     setMapStyle(getMapStyle(visibility) as StyleSpecification)
   }, [visibility])
+
+  useEffect(() => {
+    setDepartements(deps)
+  }, [deps])
 
   return (
     <MapGL
@@ -131,6 +152,7 @@ export default function FranceMap({ visibility }: MapProps) {
       minZoom={0}
       maxZoom={8}
       onMouseMove={onHover}
+      onClick={onClick}
       interactiveLayerIds={['departementsLayer']}
     >
       {franceOverlay && (
@@ -139,8 +161,9 @@ export default function FranceMap({ visibility }: MapProps) {
         </Source>
       )}
 
-      {departementsOverlay && (
-        <Source id='departements' type='geojson' data={departementsOverlay}>
+      {departements && (
+        <Source id='departements' type='geojson' data={departements}>
+          <Layer {...foundDepartementLayer} filter={['==', ['get', 'found'], 0]} />
           <Layer {...departementsLayer} />
           <Layer {...highlightedDepartementLayer} filter={filter} />
         </Source>

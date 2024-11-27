@@ -13,17 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Fragment, MouseEvent, useState } from 'react'
-
-export type MapLayer = {
-  ids: string[]
-  label: string
-  visible: boolean
-}
-
-export type MapVisibility = {
-  cities: MapLayer
-  regions: MapLayer
-}
+import { Departement, MapVisibility } from '../types'
 
 interface SettingsMenuProps {
   visibility: MapVisibility
@@ -102,21 +92,25 @@ function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps)
 interface ControlPanelProps {
   visibility: MapVisibility
   handleVisibilityToggle: (key: keyof MapVisibility) => () => void
+  target?: Departement
 }
 
-export default function ControlPanel(props: ControlPanelProps) {
+export default function ControlPanel({
+  visibility,
+  handleVisibilityToggle,
+  target,
+}: ControlPanelProps) {
   return (
     <Card sx={{ position: 'absolute', top: 20, left: 20 }}>
       <Stack direction='row' sx={{ justifyContent: 'end', alignItems: 'center', padding: 1 }}>
-        <SettingsMenu
-          visibility={props.visibility}
-          handleVisibilityToggle={props.handleVisibilityToggle}
-        />
+        <SettingsMenu visibility={visibility} handleVisibilityToggle={handleVisibilityToggle} />
       </Stack>
       <CardContent>
-        <Typography variant='subtitle1' component='div' sx={{ color: 'text.secondary' }}>
-          Cliquez sur le département 33 Gironde
-        </Typography>
+        {target && (
+          <Typography variant='subtitle1' component='div' sx={{ color: 'text.secondary' }}>
+            Cliquez sur le département {target.code} - {target.nom}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   )
