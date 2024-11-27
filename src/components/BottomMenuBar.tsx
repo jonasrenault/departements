@@ -1,24 +1,27 @@
-import { Settings } from '@mui/icons-material'
-import type { FeatureCollection, Polygon } from 'geojson'
+import { AdsClick, Settings } from '@mui/icons-material'
 import {
+  AppBar,
   Box,
   Button,
-  Card,
-  CardContent,
   Checkbox,
+  Chip,
   CircularProgress,
   CircularProgressProps,
   IconButton,
+  Link,
   ListItemIcon,
   ListSubheader,
   Menu,
   MenuItem,
   Stack,
+  Toolbar,
   Tooltip,
   Typography,
 } from '@mui/material'
-import { Fragment, MouseEvent, useEffect, useState } from 'react'
-import { Departement, MapVisibility, GameStats } from '../types'
+import type { FeatureCollection, Polygon } from 'geojson'
+import { forwardRef, Fragment, MouseEvent, useEffect, useState } from 'react'
+import { NavLink } from 'react-router'
+import { Departement, GameStats, MapVisibility } from '../types'
 
 interface SettingsMenuProps {
   visibility: MapVisibility
@@ -41,10 +44,10 @@ function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps)
         <IconButton
           onClick={handleClick}
           size='small'
-          // sx={{ ml: 2 }}
           aria-controls={open ? 'settings-menu' : undefined}
           aria-haspopup='true'
           aria-expanded={open ? 'true' : undefined}
+          color='inherit'
         >
           <Settings />
         </IconButton>
@@ -54,31 +57,30 @@ function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps)
         id='settings-menu'
         open={open}
         onClose={handleClose}
-        // onClick={handleClose}
         slotProps={{
           paper: {
             elevation: 0,
             sx: {
               overflow: 'visible',
               filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-              mt: 1.5,
+              mb: 1.5,
               '&::before': {
                 content: '""',
                 display: 'block',
                 position: 'absolute',
-                top: 0,
+                bottom: 0,
                 right: 14,
                 width: 10,
                 height: 10,
                 bgcolor: 'background.paper',
-                transform: 'translateY(-50%) rotate(45deg)',
+                transform: 'translateY(50%) rotate(45deg)',
                 zIndex: 0,
               },
             },
           },
         }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
       >
         <ListSubheader>Affichage</ListSubheader>
         {Object.entries(visibility).map(([key, value]) => (
@@ -94,9 +96,12 @@ function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps)
   )
 }
 
-function CircularProgressWithLabel(props: CircularProgressProps & { value: number }) {
+const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
+  props: CircularProgressProps & { value: number },
+  ref,
+) {
   return (
-    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+    <Box sx={{ position: 'relative', display: 'inline-flex' }} {...props} ref={ref}>
       <CircularProgress variant='determinate' {...props} />
       <Box
         sx={{
@@ -113,14 +118,14 @@ function CircularProgressWithLabel(props: CircularProgressProps & { value: numbe
         <Typography
           variant='caption'
           component='div'
-          sx={{ color: 'text.secondary' }}
+          sx={{ color: '#ffffff' }}
         >{`${Math.round(props.value)}%`}</Typography>
       </Box>
     </Box>
   )
-}
+})
 
-interface ControlPanelProps {
+interface BottomMenuBarProps {
   visibility: MapVisibility
   handleVisibilityToggle: (key: keyof MapVisibility) => () => void
   target?: Departement
@@ -129,14 +134,14 @@ interface ControlPanelProps {
   reset: () => void
 }
 
-export default function ControlPanel({
+export default function BottomMenuBar({
   visibility,
   handleVisibilityToggle,
   target,
   guesses,
   departements,
   reset,
-}: ControlPanelProps) {
+}: BottomMenuBarProps) {
   const [stats, setStats] = useState<GameStats>()
 
   useEffect(() => {
@@ -151,73 +156,84 @@ export default function ControlPanel({
   }, [departements])
 
   return (
-    <Card sx={{ position: 'absolute', top: 20, left: 20, opacity: 0.8, maxWidth: 300 }}>
-      <Stack direction='row' sx={{ justifyContent: 'end', alignItems: 'center', padding: 1 }}>
-        <SettingsMenu visibility={visibility} handleVisibilityToggle={handleVisibilityToggle} />
-      </Stack>
-      <CardContent>
-        {target ? (
-          <Typography variant='subtitle1' component='div' sx={{ color: 'text.secondary' }}>
-            Cliquez sur le département{' '}
-            <span style={{ fontWeight: 'bold' }}>
-              {target.code} - {target.nom}
-            </span>
-            {` (${4 - guesses} essai${guesses > 2 ? '' : 's'} restant)`}
-          </Typography>
-        ) : (
-          <Stack
-            direction='row'
-            sx={{ justifyContent: 'center', alignItems: 'center', padding: 1 }}
-          >
-            <Button variant='contained' onClick={reset}>
-              Rejouer
-            </Button>
-          </Stack>
-        )}
+    <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
+      <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography component='h1' variant='h6' color='inherit' noWrap>
+          <Link component={NavLink} to='/' color='inherit' underline='none'>
+            Quiz Départements
+          </Link>
+        </Typography>
+        <Box>
+          {target ? (
+            <Stack direction='row' sx={{ alignItems: 'center' }}>
+              <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
+                Cliquez sur le département{' '}
+                <span style={{ fontWeight: 'bold' }}>
+                  {target.code} - {target.nom}
+                </span>
+              </Typography>
+              <Tooltip
+                title={`${4 - guesses} essai${guesses > 2 ? '' : 's'} restant`}
+                sx={{ ml: 2 }}
+              >
+                <Chip
+                  icon={<AdsClick />}
+                  label={4 - guesses}
+                  color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
+                  size='small'
+                />
+              </Tooltip>
+            </Stack>
+          ) : (
+            <Stack
+              direction='row'
+              sx={{ justifyContent: 'center', alignItems: 'center', padding: 1 }}
+            >
+              <Button variant='contained' onClick={reset} color='secondary'>
+                Rejouer
+              </Button>
+            </Stack>
+          )}
+        </Box>
 
-        <Stack direction='row' sx={{ justifyContent: 'center', alignItems: 'center', padding: 1 }}>
-          <Box sx={{ color: '#059669' }}>
-            <Tooltip title={`Réponses correctes (${stats?.correct} / ${stats?.total})`}>
-              <div>
+        <Stack direction='row' sx={{ justifyContent: 'end', alignItems: 'center' }}>
+          <Stack direction='row' sx={{ justifyContent: 'center', alignItems: 'center', mr: 2 }}>
+            <Box sx={{ color: '#059669', display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={`Réponses correctes (${stats?.correct} / ${stats?.total})`}>
                 <CircularProgressWithLabel
                   value={stats ? (stats.correct / stats.total) * 100 : 0}
                   color='inherit'
                 />
-              </div>
-            </Tooltip>
-          </Box>
-          <Box sx={{ color: '#0891B2' }}>
-            <Tooltip title={`Réponses au deuxième essai (${stats?.second} / ${stats?.total})`}>
-              <div>
+              </Tooltip>
+            </Box>
+            <Box sx={{ color: '#0891B2', display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={`Réponses au deuxième essai (${stats?.second} / ${stats?.total})`}>
                 <CircularProgressWithLabel
                   value={stats ? (stats.second / stats.total) * 100 : 0}
                   color='inherit'
                 />
-              </div>
-            </Tooltip>
-          </Box>
-          <Box sx={{ color: '#DB2777' }}>
-            <Tooltip title={`Réponses au troisième essai (${stats?.third} / ${stats?.total})`}>
-              <div>
+              </Tooltip>
+            </Box>
+            <Box sx={{ color: '#DB2777', display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={`Réponses au troisième essai (${stats?.third} / ${stats?.total})`}>
                 <CircularProgressWithLabel
                   value={stats ? (stats.third / stats.total) * 100 : 0}
                   color='inherit'
                 />
-              </div>
-            </Tooltip>
-          </Box>
-          <Box sx={{ color: '#DC2626' }}>
-            <Tooltip title={`Mauvaises réponses (${stats?.error} / ${stats?.total})`}>
-              <div>
+              </Tooltip>
+            </Box>
+            <Box sx={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={`Mauvaises réponses (${stats?.error} / ${stats?.total})`}>
                 <CircularProgressWithLabel
                   value={stats ? (stats.error / stats.total) * 100 : 0}
                   color='inherit'
                 />
-              </div>
-            </Tooltip>
-          </Box>
+              </Tooltip>
+            </Box>
+          </Stack>
+          <SettingsMenu visibility={visibility} handleVisibilityToggle={handleVisibilityToggle} />
         </Stack>
-      </CardContent>
-    </Card>
+      </Toolbar>
+    </AppBar>
   )
 }

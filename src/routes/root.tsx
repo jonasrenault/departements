@@ -1,25 +1,18 @@
-import { Box, Toolbar } from '@mui/material'
+import { Stack } from '@mui/material'
 import { Outlet } from 'react-router'
-import TopMenuBar from '../components/TopMenuBar'
 
 export default function Root() {
   return (
-    <Box sx={{ display: 'flex' }}>
-      <TopMenuBar />
-      <Box
-        component='main'
-        sx={{
-          flexGrow: 1,
-          height: '100vh',
-          overflow: 'auto',
-          // paddingBottom: 5,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <Toolbar></Toolbar>
-        <Outlet />
-      </Box>
-    </Box>
+    <Stack
+      component='main'
+      direction='column'
+      sx={{
+        height: '100vh',
+        overflow: 'auto',
+        display: 'flex',
+      }}
+    >
+      <Outlet />
+    </Stack>
   )
 }

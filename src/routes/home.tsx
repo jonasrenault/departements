@@ -1,7 +1,8 @@
+import { Stack, Toolbar } from '@mui/material'
 import type { FeatureCollection, Polygon } from 'geojson'
 import { useState } from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
-import ControlPanel from '../components/ControlPanel'
+import BottomMenuBar from '../components/BottomMenuBar'
 import FranceMap from '../components/FranceMap'
 import { Departement, MapVisibility } from '../types'
 
@@ -86,13 +87,16 @@ export default function Home() {
   }
 
   return (
-    <div style={{ flexGrow: '1', position: 'relative' }}>
-      <FranceMap
-        visibility={visibility}
-        onDepartementClick={onDepartementClick}
-        deps={departements}
-      />
-      <ControlPanel
+    <Stack direction='column' sx={{ flexGrow: 1 }}>
+      <Stack direction='column' sx={{ flexGrow: 1 }}>
+        <FranceMap
+          visibility={visibility}
+          onDepartementClick={onDepartementClick}
+          deps={departements}
+        />
+        <Toolbar />
+      </Stack>
+      <BottomMenuBar
         visibility={visibility}
         handleVisibilityToggle={handleVisibilityToggle}
         target={target}
@@ -100,6 +104,6 @@ export default function Home() {
         departements={departements}
         reset={reset}
       />
-    </div>
+    </Stack>
   )
 }
