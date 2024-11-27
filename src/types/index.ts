@@ -15,3 +15,12 @@ export type Departement = {
   found?: number
   guess?: boolean
 }
+
+export type GameStats = {
+  total: number
+  seen: number
+  correct: number
+  second: number
+  third: number
+  error: number
+}

@@ -79,6 +79,12 @@ export default function Home() {
     }
   }
 
+  const reset = () => {
+    setDepartements(defaultDepartements)
+    setTarget(selectRandomTarget(defaultDepartements))
+    setGuesses(1)
+  }
+
   return (
     <div style={{ flexGrow: '1', position: 'relative' }}>
       <FranceMap
@@ -91,6 +97,8 @@ export default function Home() {
         handleVisibilityToggle={handleVisibilityToggle}
         target={target}
         guesses={guesses}
+        departements={departements}
+        reset={reset}
       />
     </div>
   )
