@@ -1,5 +1,5 @@
 import type { FeatureCollection, Polygon } from 'geojson'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
 import ControlPanel from '../components/ControlPanel'
 import FranceMap from '../components/FranceMap'
@@ -9,6 +9,15 @@ const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection
   Polygon,
   Departement
 >
+defaultDepartements.features.forEach((feature) => (feature.properties.found = 0))
+
+function selectRandomTarget(
+  departements?: FeatureCollection<Polygon, Departement>,
+): Departement | undefined {
+  const possible = departements?.features.filter((feature) => !feature.properties.found)
+  if (possible && possible.length)
+    return possible[Math.floor(Math.random() * possible.length)].properties
+}
 
 export default function Home() {
   const [visibility, setVisibility] = useState({
@@ -26,13 +35,8 @@ export default function Home() {
 
   const [departements, setDepartements] =
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)
-  const [target, setTarget] = useState<Departement>()
-  const [guesses, setGuesses] = useState(0)
-
-  useEffect(() => {
-    const possible = departements.features.filter((feature) => !feature.properties.found)
-    setTarget(possible[Math.floor(Math.random() * possible.length)].properties)
-  }, [departements])
+  const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
+  const [guesses, setGuesses] = useState(1)
 
   const handleVisibilityToggle = (value: keyof MapVisibility) => () => {
     setVisibility((_visibility) => ({
@@ -44,24 +48,33 @@ export default function Home() {
   const onDepartementClick = (departement: Departement) => {
     if (target) {
       const found = departement.code === target.code
-      if (!found && guesses < 2) {
+      const showSolution = !found && guesses >= 3
+
+      let updatedDeps = undefined
+      setDepartements((_departements) => {
+        updatedDeps = {
+          ..._departements,
+          features: _departements.features.map((feature) => {
+            const feat = { ...feature, properties: { ...feature.properties } }
+            if (feature.properties.code === departement.code) {
+              if (found) feat.properties.found = guesses
+              else feat.properties.guess = true
+            } else {
+              feat.properties.guess = false
+            }
+            if (showSolution && feature.properties.code === target.code)
+              feat.properties.found = guesses + 1
+            return feat
+          }),
+        }
+        return updatedDeps
+      })
+
+      if (!found && guesses < 3) {
         setGuesses((_guesses) => _guesses + 1)
       } else {
-        setDepartements((_departements) => {
-          return {
-            ..._departements,
-            features: _departements.features.map((feature) => {
-              if (feature.properties.code === departement.code) {
-                return {
-                  ...feature,
-                  properties: { ...feature.properties, found: found ? guesses : guesses + 1 },
-                }
-              }
-              return feature
-            }),
-          }
-        })
-        setGuesses(0)
+        setGuesses(1)
+        setTarget(selectRandomTarget(updatedDeps))
       }
     }
   }
@@ -77,6 +90,7 @@ export default function Home() {
         visibility={visibility}
         handleVisibilityToggle={handleVisibilityToggle}
         target={target}
+        guesses={guesses}
       />
     </div>
   )

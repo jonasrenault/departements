@@ -13,4 +13,5 @@ export type Departement = {
   code: string
   nom: string
   found?: number
+  guess?: boolean
 }

@@ -93,12 +93,14 @@ interface ControlPanelProps {
   visibility: MapVisibility
   handleVisibilityToggle: (key: keyof MapVisibility) => () => void
   target?: Departement
+  guesses: number
 }
 
 export default function ControlPanel({
   visibility,
   handleVisibilityToggle,
   target,
+  guesses,
 }: ControlPanelProps) {
   return (
     <Card sx={{ position: 'absolute', top: 20, left: 20 }}>
@@ -109,6 +111,8 @@ export default function ControlPanel({
         {target && (
           <Typography variant='subtitle1' component='div' sx={{ color: 'text.secondary' }}>
             Cliquez sur le département {target.code} - {target.nom}
+            <br />
+            {`${4 - guesses} essai${guesses > 2 ? '' : 's'} restant`}
           </Typography>
         )}
       </CardContent>

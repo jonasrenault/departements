@@ -49,14 +49,62 @@ const highlightedDepartementLayer: FillLayer = {
   },
 }
 
-// highlighted department layer
+// department found on first guess
 const foundDepartementLayer: FillLayer = {
   id: 'foundDepartementLayer',
   type: 'fill',
   source: 'departementsLayer',
   paint: {
     'fill-outline-color': '#484896',
-    'fill-color': '#1976d2',
+    'fill-color': '#059669',
+    'fill-opacity': 0.7,
+  },
+}
+
+// department found on second guess
+const missDepartementLayer: FillLayer = {
+  id: 'missDepartementLayer',
+  type: 'fill',
+  source: 'departementsLayer',
+  paint: {
+    'fill-outline-color': '#484896',
+    'fill-color': '#0891B2',
+    'fill-opacity': 0.7,
+  },
+}
+
+// department found on third guess
+const lastDepartementLayer: FillLayer = {
+  id: 'lastDepartementLayer',
+  type: 'fill',
+  source: 'departementsLayer',
+  paint: {
+    'fill-outline-color': '#484896',
+    'fill-color': '#DB2777',
+    'fill-opacity': 0.7,
+  },
+}
+
+// department not found
+const errorDepartementLayer: FillLayer = {
+  id: 'errorDepartementLayer',
+  type: 'fill',
+  source: 'departementsLayer',
+  paint: {
+    'fill-outline-color': '#484896',
+    'fill-color': '#DC2626',
+    'fill-opacity': 0.7,
+  },
+}
+
+// department not found
+const guessDepartementLayer: FillLayer = {
+  id: 'guessDepartementLayer',
+  type: 'fill',
+  source: 'departementsLayer',
+  paint: {
+    'fill-outline-color': '#484896',
+    'fill-color': '#CA8A04',
     'fill-opacity': 0.7,
   },
 }
@@ -130,7 +178,12 @@ export default function FranceMap({ visibility, onDepartementClick, deps }: MapP
 
   const selectedDep = hoverInfo && hoverInfo.dep
   const filter = useMemo(
-    () => ['==', 'code', selectedDep ? selectedDep.code : ''] as FilterSpecification,
+    () =>
+      [
+        'all',
+        ['==', ['get', 'code'], selectedDep ? selectedDep.code : ''],
+        ['==', ['get', 'found'], 0],
+      ] as FilterSpecification,
     [selectedDep],
   )
 
@@ -163,13 +216,37 @@ export default function FranceMap({ visibility, onDepartementClick, deps }: MapP
 
       {departements && (
         <Source id='departements' type='geojson' data={departements}>
-          <Layer {...foundDepartementLayer} filter={['==', ['get', 'found'], 0]} />
-          <Layer {...departementsLayer} />
-          <Layer {...highlightedDepartementLayer} filter={filter} />
+          <Layer beforeId='place-town' {...departementsLayer} />
+          <Layer beforeId='place-town' {...highlightedDepartementLayer} filter={filter} />
+          <Layer
+            beforeId='place-town'
+            {...foundDepartementLayer}
+            filter={['==', ['get', 'found'], 1]}
+          />
+          <Layer
+            beforeId='place-town'
+            {...missDepartementLayer}
+            filter={['==', ['get', 'found'], 2]}
+          />
+          <Layer
+            beforeId='place-town'
+            {...lastDepartementLayer}
+            filter={['==', ['get', 'found'], 3]}
+          />
+          <Layer
+            beforeId='place-town'
+            {...errorDepartementLayer}
+            filter={['>', ['get', 'found'], 3]}
+          />
+          <Layer
+            beforeId='place-town'
+            {...guessDepartementLayer}
+            filter={['boolean', ['get', 'guess']]}
+          />
         </Source>
       )}
 
-      {selectedDep && (
+      {selectedDep && selectedDep.found && (
         <Popup
           longitude={hoverInfo.longitude}
           latitude={hoverInfo.latitude}
@@ -177,7 +254,7 @@ export default function FranceMap({ visibility, onDepartementClick, deps }: MapP
           closeButton={false}
           className='dep-info'
         >
-          {selectedDep.nom}
+          {`${selectedDep.code} - ${selectedDep.nom}`}
         </Popup>
       )}
     </MapGL>
