@@ -91,12 +91,8 @@ function GameMenu() {
   )
 }
 
-interface SettingsMenuProps {
-  visibility: MapVisibility
-  handleVisibilityToggle: (key: keyof MapVisibility) => () => void
-}
-
-function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps) {
+function SettingsMenu() {
+  const { visibility, setVisibility } = useGame()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: MouseEvent<HTMLElement>) => {
@@ -104,6 +100,13 @@ function SettingsMenu({ visibility, handleVisibilityToggle }: SettingsMenuProps)
   }
   const handleClose = () => {
     setAnchorEl(null)
+  }
+
+  const handleVisibilityToggle = (value: keyof MapVisibility) => () => {
+    setVisibility((_visibility) => ({
+      ..._visibility,
+      [value]: { ..._visibility[value], visible: !_visibility[value].visible },
+    }))
   }
 
   return (
@@ -194,15 +197,8 @@ const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
 })
 
 export default function GameMenuBar() {
-  const { visibility, setVisibility, target, guesses, departements, reset } = useGame()
+  const { target, guesses, departements, reset } = useGame()
   const [stats, setStats] = useState<GameStats>()
-
-  const handleVisibilityToggle = (value: keyof MapVisibility) => () => {
-    setVisibility((_visibility) => ({
-      ..._visibility,
-      [value]: { ..._visibility[value], visible: !_visibility[value].visible },
-    }))
-  }
 
   useEffect(() => {
     setStats({
@@ -293,7 +289,7 @@ export default function GameMenuBar() {
               </Tooltip>
             </Box>
           </Stack>
-          <SettingsMenu visibility={visibility} handleVisibilityToggle={handleVisibilityToggle} />
+          <SettingsMenu />
         </Stack>
       </Toolbar>
     </AppBar>
