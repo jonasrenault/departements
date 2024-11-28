@@ -71,7 +71,9 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
   const [guesses, setGuesses] = useState(1)
   const [maxGuesses, setMaxGuesses] = useState(parseInt(localStorage.getItem('maxGuesses') ?? '3'))
-  const [gameMode, setGameMode] = useState(GameMode.Point)
+  const [gameMode, setGameMode] = useState(
+    GameMode[(localStorage.getItem('gameMode') ?? 'Point') as keyof typeof GameMode],
+  )
 
   useEffect(() => {
     localStorage.setItem('maxGuesses', maxGuesses.toString())
@@ -88,6 +90,10 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
       localStorage.setItem(`ids-${key}`, String(value)),
     )
   }, [departementsId])
+
+  useEffect(() => {
+    localStorage.setItem(`gameMode`, String(gameMode))
+  }, [gameMode])
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
