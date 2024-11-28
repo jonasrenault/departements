@@ -64,7 +64,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   const [departementsId, setDepartementsId] = useState({
     nom: (localStorage.getItem('ids-nom') ?? 'true') === 'true',
     code: (localStorage.getItem('ids-code') ?? 'true') === 'true',
-    prefecture: (localStorage.getItem('ids-prefecture') ?? 'false') === 'true',
+    // prefecture: (localStorage.getItem('ids-prefecture') ?? 'false') === 'true',
   } as DepartementId)
   const [departements, setDepartements] =
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)

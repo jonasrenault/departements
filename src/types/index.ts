@@ -12,7 +12,7 @@ export type MapVisibility = {
 export type DepartementId = {
   nom: boolean
   code: boolean
-  prefecture: boolean
+  // prefecture: boolean
 }
 
 export type Departement = {
