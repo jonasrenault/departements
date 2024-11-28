@@ -52,6 +52,7 @@ function SettingsMenu() {
     setDepartementsId,
     maxGuesses,
     setMaxGuesses,
+    reset,
   } = useGame()
   const [open, setOpen] = useState(false)
   const [maxGuessesError, setMaxGuessesError] = useState('')
@@ -98,8 +99,8 @@ function SettingsMenu() {
           <Settings />
         </IconButton>
       </Tooltip>
-      <Drawer anchor='right' open={open} onClose={toggleDrawer(false)}>
-        <List sx={{ width: 250 }}>
+      <Drawer anchor='right' open={open} onClose={toggleDrawer(false)} sx={{ display: 'flex' }}>
+        <List sx={{ width: 250, flexGrow: '1' }}>
           <ListSubheader>Affichage</ListSubheader>
           {Object.entries(visibility).map(([key, value]) => (
             <ListItem key={key} disablePadding>
@@ -172,6 +173,10 @@ function SettingsMenu() {
             />
           </ListItem>
         </List>
+
+        <Button variant='outlined' onClick={reset} startIcon={<RestartAlt />} sx={{ margin: 1.5 }}>
+          Rejouer
+        </Button>
       </Drawer>
     </Fragment>
   )

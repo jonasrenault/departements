@@ -1,5 +1,14 @@
 import type { FeatureCollection, Polygon } from 'geojson'
-import { Dispatch, FC, ReactNode, SetStateAction, createContext, useContext, useState } from 'react'
+import {
+  Dispatch,
+  FC,
+  ReactNode,
+  SetStateAction,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
 import { Departement, DepartementId, MapVisibility } from '../types'
 
@@ -42,24 +51,40 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     cities: {
       ids: ['place-city', 'place-city-capital', 'place-town'],
       label: 'Villes',
-      visible: true,
+      visible: (localStorage.getItem('visibility-cities') ?? 'true') === 'true',
     },
     regions: {
       ids: ['boundary-land-level-4', 'place-state'],
       label: 'Régions',
-      visible: true,
+      visible: (localStorage.getItem('visibility-regions') ?? 'true') === 'true',
     },
   } as MapVisibility)
   const [departementsId, setDepartementsId] = useState({
-    nom: true,
-    code: true,
-    prefecture: false,
+    nom: (localStorage.getItem('ids-nom') ?? 'true') === 'true',
+    code: (localStorage.getItem('ids-code') ?? 'true') === 'true',
+    prefecture: (localStorage.getItem('ids-prefecture') ?? 'false') === 'true',
   } as DepartementId)
   const [departements, setDepartements] =
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
   const [guesses, setGuesses] = useState(1)
-  const [maxGuesses, setMaxGuesses] = useState(3)
+  const [maxGuesses, setMaxGuesses] = useState(parseInt(localStorage.getItem('maxGuesses') ?? '3'))
+
+  useEffect(() => {
+    localStorage.setItem('maxGuesses', maxGuesses.toString())
+  }, [maxGuesses])
+
+  useEffect(() => {
+    Object.entries(visibility).forEach(([key, value]) =>
+      localStorage.setItem(`visibility-${key}`, String(value.visible)),
+    )
+  }, [visibility])
+
+  useEffect(() => {
+    Object.entries(departementsId).forEach(([key, value]) =>
+      localStorage.setItem(`ids-${key}`, String(value)),
+    )
+  }, [departementsId])
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
