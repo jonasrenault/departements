@@ -1,4 +1,4 @@
-import { AdsClick, RestartAlt, Settings, SportsEsports } from '@mui/icons-material'
+import { AdsClick, RestartAlt, Settings } from '@mui/icons-material'
 import {
   AppBar,
   Box,
@@ -7,99 +7,33 @@ import {
   Chip,
   CircularProgress,
   CircularProgressProps,
+  Divider,
+  Drawer,
   IconButton,
   Link,
+  List,
+  ListItem,
   ListItemIcon,
   ListSubheader,
-  Menu,
   MenuItem,
   Stack,
+  TextField,
   Toolbar,
   Tooltip,
   Typography,
 } from '@mui/material'
-import { forwardRef, Fragment, MouseEvent, useEffect, useState } from 'react'
+import { ChangeEvent, forwardRef, Fragment, useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
 import { GameStats, MapVisibility } from '../types'
 
-function GameMenu() {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const open = Boolean(anchorEl)
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-  const handleClose = () => {
-    setAnchorEl(null)
-  }
-
-  return (
-    <Fragment>
-      <Tooltip title='Jeu'>
-        <IconButton
-          onClick={handleClick}
-          size='small'
-          aria-controls={open ? 'game-menu' : undefined}
-          aria-haspopup='true'
-          aria-expanded={open ? 'true' : undefined}
-          color='inherit'
-        >
-          <SportsEsports />
-        </IconButton>
-      </Tooltip>
-      <Menu
-        anchorEl={anchorEl}
-        id='game-menu'
-        open={open}
-        onClose={handleClose}
-        slotProps={{
-          paper: {
-            elevation: 0,
-            sx: {
-              overflow: 'visible',
-              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-              mb: 1.5,
-              '&::before': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                bottom: 0,
-                right: 14,
-                width: 10,
-                height: 10,
-                bgcolor: 'background.paper',
-                transform: 'translateY(50%) rotate(45deg)',
-                zIndex: 0,
-              },
-            },
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-      >
-        <ListSubheader>Mode</ListSubheader>
-        {/* {Object.entries(visibility).map(([key, value]) => (
-          <MenuItem key={key} onClick={handleVisibilityToggle(key as keyof MapVisibility)} dense>
-            <ListItemIcon>
-              <Checkbox edge='start' checked={value.visible} tabIndex={-1} disableRipple />
-            </ListItemIcon>
-            {value.label}
-          </MenuItem>
-        ))} */}
-      </Menu>
-    </Fragment>
-  )
-}
-
 function SettingsMenu() {
-  const { visibility, setVisibility } = useGame()
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const open = Boolean(anchorEl)
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-  const handleClose = () => {
-    setAnchorEl(null)
+  const { visibility, setVisibility, maxGuesses, setMaxGuesses } = useGame()
+  const [open, setOpen] = useState(false)
+  const [maxGuessesError, setMaxGuessesError] = useState('')
+
+  const toggleDrawer = (newOpen: boolean) => () => {
+    setOpen(newOpen)
   }
 
   const handleVisibilityToggle = (value: keyof MapVisibility) => () => {
@@ -109,11 +43,21 @@ function SettingsMenu() {
     }))
   }
 
+  const onMaxGuessesChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value)
+    if (1 <= value && value <= 3) {
+      setMaxGuesses(value)
+      setMaxGuessesError('')
+    } else {
+      setMaxGuessesError("Le nombre d'essais doit être compris entre 1 et 3.")
+    }
+  }
+
   return (
     <Fragment>
       <Tooltip title='Paramètres'>
         <IconButton
-          onClick={handleClick}
+          onClick={toggleDrawer(true)}
           size='small'
           aria-controls={open ? 'settings-menu' : undefined}
           aria-haspopup='true'
@@ -123,46 +67,32 @@ function SettingsMenu() {
           <Settings />
         </IconButton>
       </Tooltip>
-      <Menu
-        anchorEl={anchorEl}
-        id='settings-menu'
-        open={open}
-        onClose={handleClose}
-        slotProps={{
-          paper: {
-            elevation: 0,
-            sx: {
-              overflow: 'visible',
-              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-              mb: 1.5,
-              '&::before': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                bottom: 0,
-                right: 14,
-                width: 10,
-                height: 10,
-                bgcolor: 'background.paper',
-                transform: 'translateY(50%) rotate(45deg)',
-                zIndex: 0,
-              },
-            },
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-      >
-        <ListSubheader>Affichage</ListSubheader>
-        {Object.entries(visibility).map(([key, value]) => (
-          <MenuItem key={key} onClick={handleVisibilityToggle(key as keyof MapVisibility)} dense>
-            <ListItemIcon>
-              <Checkbox edge='start' checked={value.visible} tabIndex={-1} disableRipple />
-            </ListItemIcon>
-            {value.label}
-          </MenuItem>
-        ))}
-      </Menu>
+      <Drawer anchor='right' open={open} onClose={toggleDrawer(false)}>
+        <List sx={{ width: 250 }}>
+          <ListSubheader>Affichage</ListSubheader>
+          {Object.entries(visibility).map(([key, value]) => (
+            <MenuItem key={key} onClick={handleVisibilityToggle(key as keyof MapVisibility)} dense>
+              <ListItemIcon>
+                <Checkbox edge='start' checked={value.visible} tabIndex={-1} disableRipple />
+              </ListItemIcon>
+              {value.label}
+            </MenuItem>
+          ))}
+          <Divider />
+          <ListItem>
+            <TextField
+              label="Nombre d'essais"
+              variant='outlined'
+              type='number'
+              fullWidth
+              value={maxGuesses}
+              onChange={onMaxGuessesChange}
+              error={Boolean(maxGuessesError)}
+              helperText={maxGuessesError}
+            />
+          </ListItem>
+        </List>
+      </Drawer>
     </Fragment>
   )
 }
@@ -197,7 +127,7 @@ const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
 })
 
 export default function GameMenuBar() {
-  const { target, guesses, departements, reset } = useGame()
+  const { target, guesses, maxGuesses, departements, reset } = useGame()
   const [stats, setStats] = useState<GameStats>()
 
   useEffect(() => {
@@ -230,12 +160,12 @@ export default function GameMenuBar() {
                   </span>
                 </Typography>
                 <Tooltip
-                  title={`${4 - guesses} essai${guesses > 2 ? '' : 's'} restant`}
+                  title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
                   sx={{ ml: 2 }}
                 >
                   <Chip
                     icon={<AdsClick />}
-                    label={4 - guesses}
+                    label={maxGuesses - guesses + 1}
                     color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
                     size='small'
                   />
@@ -264,22 +194,26 @@ export default function GameMenuBar() {
                 />
               </Tooltip>
             </Box>
-            <Box sx={{ color: '#0891B2', display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={`Réponses au deuxième essai (${stats?.second} / ${stats?.total})`}>
-                <CircularProgressWithLabel
-                  value={stats ? (stats.second / stats.total) * 100 : 0}
-                  color='inherit'
-                />
-              </Tooltip>
-            </Box>
-            <Box sx={{ color: '#DB2777', display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={`Réponses au troisième essai (${stats?.third} / ${stats?.total})`}>
-                <CircularProgressWithLabel
-                  value={stats ? (stats.third / stats.total) * 100 : 0}
-                  color='inherit'
-                />
-              </Tooltip>
-            </Box>
+            {maxGuesses > 1 && (
+              <Box sx={{ color: '#0891B2', display: 'flex', alignItems: 'center' }}>
+                <Tooltip title={`Réponses au deuxième essai (${stats?.second} / ${stats?.total})`}>
+                  <CircularProgressWithLabel
+                    value={stats ? (stats.second / stats.total) * 100 : 0}
+                    color='inherit'
+                  />
+                </Tooltip>
+              </Box>
+            )}
+            {maxGuesses > 2 && (
+              <Box sx={{ color: '#DB2777', display: 'flex', alignItems: 'center' }}>
+                <Tooltip title={`Réponses au troisième essai (${stats?.third} / ${stats?.total})`}>
+                  <CircularProgressWithLabel
+                    value={stats ? (stats.third / stats.total) * 100 : 0}
+                    color='inherit'
+                  />
+                </Tooltip>
+              </Box>
+            )}
             <Box sx={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
               <Tooltip title={`Mauvaises réponses (${stats?.error} / ${stats?.total})`}>
                 <CircularProgressWithLabel

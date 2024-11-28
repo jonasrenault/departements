@@ -14,6 +14,8 @@ type GameContextActions = {
   setVisibility: Dispatch<SetStateAction<MapVisibility>>
   target: Departement | undefined
   guesses: number
+  maxGuesses: number
+  setMaxGuesses: Dispatch<SetStateAction<number>>
   departements: FeatureCollection<Polygon, Departement>
   reset: () => void
   onDepartementClick: (departement: Departement) => void
@@ -50,11 +52,12 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
   const [guesses, setGuesses] = useState(1)
+  const [maxGuesses, setMaxGuesses] = useState(3)
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
       const found = departement.code === target.code
-      const showSolution = !found && guesses >= 3
+      const showSolution = !found && guesses >= maxGuesses
 
       let updatedDeps = undefined
       setDepartements((_departements) => {
@@ -68,15 +71,14 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
             } else {
               feat.properties.guess = false
             }
-            if (showSolution && feature.properties.code === target.code)
-              feat.properties.found = guesses + 1
+            if (showSolution && feature.properties.code === target.code) feat.properties.found = 4
             return feat
           }),
         }
         return updatedDeps
       })
 
-      if (!found && guesses < 3) {
+      if (!found && guesses < maxGuesses) {
         setGuesses((_guesses) => _guesses + 1)
       } else {
         setGuesses(1)
@@ -98,6 +100,8 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
         setVisibility,
         target,
         guesses,
+        maxGuesses,
+        setMaxGuesses,
         departements,
         reset,
         onDepartementClick,
