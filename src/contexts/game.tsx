@@ -93,6 +93,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem(`gameMode`, GameMode[gameMode])
+    reset()
   }, [gameMode])
 
   const onDepartementClick = (departement: Departement) => {

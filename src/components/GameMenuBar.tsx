@@ -252,7 +252,13 @@ export default function GameMenuBar() {
   return (
     <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
       <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography component='h1' variant='h6' color='inherit' noWrap>
+        <Typography
+          component='h1'
+          variant='h6'
+          color='inherit'
+          noWrap
+          sx={{ display: { sm: 'none', md: 'inherit' } }}
+        >
           <Link component={NavLink} to='/' color='inherit' underline='none'>
             Quiz Départements
           </Link>
@@ -260,61 +266,67 @@ export default function GameMenuBar() {
         <Box>
           <Stack direction='row' sx={{ alignItems: 'center' }}>
             {target ? (
-              gameMode === GameMode.Point ? (
-                <>
-                  <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
+              <>
+                {gameMode === GameMode.Point ? (
+                  <Typography
+                    component='div'
+                    sx={{ color: 'inherit', typography: { sm: 'caption', md: 'body1' } }}
+                  >
                     Cliquez sur le département{' '}
                     <span style={{ fontWeight: 'bold' }}>{getLabel(target)}</span>
                   </Typography>
-                  <Tooltip
-                    title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
-                    sx={{ ml: 2 }}
-                  >
-                    <Chip
-                      icon={<AdsClick />}
-                      label={maxGuesses - guesses + 1}
-                      color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
+                ) : (
+                  <>
+                    <Typography
+                      component='div'
+                      sx={{ color: 'inherit', typography: { sm: 'caption', md: 'body1' } }}
+                    >
+                      Identifiez le département surligné :
+                    </Typography>
+                    <Autocomplete
+                      // disablePortal
+                      autoHighlight
+                      options={departements.features
+                        .filter((feature) => !feature.properties.found)
+                        .map((feature) => feature.properties)}
+                      getOptionLabel={getLabel}
+                      onChange={(_, newValue: Departement | null) => {
+                        if (newValue) {
+                          onDepartementClick(newValue)
+                          setComboValue(null)
+                          setComboInputValue('')
+                        }
+                      }}
+                      value={comboValue}
+                      inputValue={comboInputValue}
+                      onInputChange={(_, newInputValue) => {
+                        setComboInputValue(newInputValue)
+                      }}
+                      sx={{
+                        width: { sm: 200, md: 300 },
+                        color: 'inherit',
+                        '& .MuiInputBase-root': {
+                          bgcolor: 'background.paper',
+                        },
+                        ml: 2,
+                      }}
                       size='small'
+                      renderInput={(params) => <TextField {...params} />}
                     />
-                  </Tooltip>
-                </>
-              ) : (
-                <>
-                  <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
-                    Identifiez le département surligné :
-                  </Typography>
-                  <Autocomplete
-                    // disablePortal
-                    autoHighlight
-                    options={departements.features
-                      .filter((feature) => !feature.properties.found)
-                      .map((feature) => feature.properties)}
-                    getOptionLabel={getLabel}
-                    onChange={(_, newValue: Departement | null) => {
-                      if (newValue) {
-                        onDepartementClick(newValue)
-                        setComboValue(null)
-                        setComboInputValue('')
-                      }
-                    }}
-                    value={comboValue}
-                    inputValue={comboInputValue}
-                    onInputChange={(_, newInputValue) => {
-                      setComboInputValue(newInputValue)
-                    }}
-                    sx={{
-                      width: 300,
-                      color: 'inherit',
-                      '& .MuiInputBase-root': {
-                        bgcolor: 'background.paper',
-                      },
-                      ml: 2,
-                    }}
+                  </>
+                )}
+                <Tooltip
+                  title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
+                  sx={{ ml: 2 }}
+                >
+                  <Chip
+                    icon={<AdsClick />}
+                    label={maxGuesses - guesses + 1}
+                    color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
                     size='small'
-                    renderInput={(params) => <TextField {...params} />}
                   />
-                </>
-              )
+                </Tooltip>
+              </>
             ) : (
               <Button
                 variant='contained'
