@@ -1,4 +1,4 @@
-import { AdsClick, RestartAlt, Settings } from '@mui/icons-material'
+import { AdsClick, EditNote, RestartAlt, Settings } from '@mui/icons-material'
 import {
   AppBar,
   Box,
@@ -13,9 +13,11 @@ import {
   Link,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
+  ListItemText,
   ListSubheader,
-  MenuItem,
+  Radio,
   Stack,
   TextField,
   Toolbar,
@@ -25,10 +27,32 @@ import {
 import { ChangeEvent, forwardRef, Fragment, useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
-import { GameStats, MapVisibility } from '../types'
+import { DepartementId, GameStats, MapVisibility } from '../types'
+
+const IdLabels = new Map([
+  ['code', 'Code'],
+  ['nom', 'Nom'],
+  ['prefecture', 'Préfecture'],
+])
+
+// const IdIcons = new Map([['code', <Pin />], ["nom", <Badge/>], ["prefecture", ]])
+
+function isOnlyCheckedValue(key: string, departementsId: DepartementId) {
+  return !Object.entries(departementsId)
+    .filter((entry) => entry[0] !== key)
+    .map((entry) => entry[1])
+    .some(Boolean)
+}
 
 function SettingsMenu() {
-  const { visibility, setVisibility, maxGuesses, setMaxGuesses } = useGame()
+  const {
+    visibility,
+    setVisibility,
+    departementsId,
+    setDepartementsId,
+    maxGuesses,
+    setMaxGuesses,
+  } = useGame()
   const [open, setOpen] = useState(false)
   const [maxGuessesError, setMaxGuessesError] = useState('')
 
@@ -41,6 +65,13 @@ function SettingsMenu() {
       ..._visibility,
       [value]: { ..._visibility[value], visible: !_visibility[value].visible },
     }))
+  }
+
+  const handleIdToggle = (value: keyof DepartementId) => () => {
+    const newIds = { ...departementsId, [value]: !departementsId[value] }
+    if (Object.values(newIds).some(Boolean)) {
+      setDepartementsId(newIds)
+    }
   }
 
   const onMaxGuessesChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -71,14 +102,63 @@ function SettingsMenu() {
         <List sx={{ width: 250 }}>
           <ListSubheader>Affichage</ListSubheader>
           {Object.entries(visibility).map(([key, value]) => (
-            <MenuItem key={key} onClick={handleVisibilityToggle(key as keyof MapVisibility)} dense>
-              <ListItemIcon>
-                <Checkbox edge='start' checked={value.visible} tabIndex={-1} disableRipple />
-              </ListItemIcon>
-              {value.label}
-            </MenuItem>
+            <ListItem key={key} disablePadding>
+              <ListItemButton onClick={handleVisibilityToggle(key as keyof MapVisibility)} dense>
+                <ListItemIcon>
+                  <Checkbox checked={value.visible} tabIndex={-1} disableRipple />
+                </ListItemIcon>
+                <ListItemText>{value.label}</ListItemText>
+              </ListItemButton>
+            </ListItem>
           ))}
-          <Divider />
+
+          <ListSubheader>Identification des départements</ListSubheader>
+          {Object.entries(departementsId).map(([key, value]) => (
+            <ListItem key={key} disablePadding>
+              <ListItemButton
+                onClick={handleIdToggle(key as keyof DepartementId)}
+                dense
+                disabled={value && isOnlyCheckedValue(key, departementsId)}
+              >
+                <ListItemIcon>
+                  <Checkbox checked={value} tabIndex={-1} disableRipple />
+                </ListItemIcon>
+                <ListItemText>{IdLabels.get(key)}</ListItemText>
+              </ListItemButton>
+            </ListItem>
+          ))}
+
+          <ListSubheader>Mode de jeu</ListSubheader>
+          <ListItem disablePadding secondaryAction={<AdsClick />}>
+            <ListItemButton dense>
+              <ListItemIcon>
+                <Radio
+                  checked={true}
+                  // onChange={handleChange}
+                  value='a'
+                  name='radio-game-mode'
+                  inputProps={{ 'aria-label': 'A' }}
+                />
+              </ListItemIcon>
+              <ListItemText>Pointer</ListItemText>
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding secondaryAction={<EditNote />}>
+            <ListItemButton dense>
+              <ListItemIcon>
+                <Radio
+                  checked={false}
+                  // onChange={handleChange}
+                  value='b'
+                  name='radio-game-mode'
+                  inputProps={{ 'aria-label': 'B' }}
+                />
+              </ListItemIcon>
+              <ListItemText>Nommer</ListItemText>
+            </ListItemButton>
+          </ListItem>
+
+          <Divider sx={{ mt: 1, mb: 1 }} />
           <ListItem>
             <TextField
               label="Nombre d'essais"
@@ -127,7 +207,7 @@ const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
 })
 
 export default function GameMenuBar() {
-  const { target, guesses, maxGuesses, departements, reset } = useGame()
+  const { departementsId, target, guesses, maxGuesses, departements, reset } = useGame()
   const [stats, setStats] = useState<GameStats>()
 
   useEffect(() => {
@@ -140,6 +220,15 @@ export default function GameMenuBar() {
       error: departements.features.filter((f) => f.properties.found === 4).length,
     })
   }, [departements])
+
+  const targetLabel = () => {
+    let label = ''
+    if (target) {
+      if (departementsId.code) label += target.code
+      if (departementsId.nom) label += (departementsId.code ? ' - ' : '') + target.nom
+    }
+    return label
+  }
 
   return (
     <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
@@ -155,9 +244,7 @@ export default function GameMenuBar() {
               <>
                 <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
                   Cliquez sur le département{' '}
-                  <span style={{ fontWeight: 'bold' }}>
-                    {target.code} - {target.nom}
-                  </span>
+                  <span style={{ fontWeight: 'bold' }}>{targetLabel()}</span>
                 </Typography>
                 <Tooltip
                   title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}

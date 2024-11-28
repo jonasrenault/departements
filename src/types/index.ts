@@ -9,6 +9,12 @@ export type MapVisibility = {
   regions: MapLayer
 }
 
+export type DepartementId = {
+  nom: boolean
+  code: boolean
+  prefecture: boolean
+}
+
 export type Departement = {
   code: string
   nom: string

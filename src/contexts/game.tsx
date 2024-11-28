@@ -1,7 +1,7 @@
 import type { FeatureCollection, Polygon } from 'geojson'
 import { Dispatch, FC, ReactNode, SetStateAction, createContext, useContext, useState } from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
-import { Departement, MapVisibility } from '../types'
+import { Departement, DepartementId, MapVisibility } from '../types'
 
 const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
   Polygon,
@@ -12,6 +12,8 @@ defaultDepartements.features.forEach((feature) => (feature.properties.found = 0)
 type GameContextActions = {
   visibility: MapVisibility
   setVisibility: Dispatch<SetStateAction<MapVisibility>>
+  departementsId: DepartementId
+  setDepartementsId: Dispatch<SetStateAction<DepartementId>>
   target: Departement | undefined
   guesses: number
   maxGuesses: number
@@ -48,6 +50,11 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
       visible: true,
     },
   } as MapVisibility)
+  const [departementsId, setDepartementsId] = useState({
+    nom: true,
+    code: true,
+    prefecture: false,
+  } as DepartementId)
   const [departements, setDepartements] =
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
@@ -98,6 +105,8 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
       value={{
         visibility,
         setVisibility,
+        departementsId,
+        setDepartementsId,
         target,
         guesses,
         maxGuesses,
