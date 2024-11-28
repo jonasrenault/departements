@@ -1,9 +1,6 @@
-import { Stack, Toolbar } from '@mui/material'
 import type { FeatureCollection, Polygon } from 'geojson'
-import { useState } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, createContext, useContext, useState } from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
-import BottomMenuBar from '../components/BottomMenuBar'
-import FranceMap from '../components/FranceMap'
 import { Departement, MapVisibility } from '../types'
 
 const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
@@ -11,6 +8,22 @@ const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection
   Departement
 >
 defaultDepartements.features.forEach((feature) => (feature.properties.found = 0))
+
+type GameContextActions = {
+  visibility: MapVisibility
+  setVisibility: Dispatch<SetStateAction<MapVisibility>>
+  target: Departement | undefined
+  guesses: number
+  departements: FeatureCollection<Polygon, Departement>
+  reset: () => void
+  onDepartementClick: (departement: Departement) => void
+}
+
+const GameContext = createContext<GameContextActions>({} as GameContextActions)
+
+interface GameContextProviderProps {
+  children: ReactNode
+}
 
 function selectRandomTarget(
   departements?: FeatureCollection<Polygon, Departement>,
@@ -20,7 +33,7 @@ function selectRandomTarget(
     return possible[Math.floor(Math.random() * possible.length)].properties
 }
 
-export default function Home() {
+const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   const [visibility, setVisibility] = useState({
     cities: {
       ids: ['place-city', 'place-city-capital', 'place-town'],
@@ -33,18 +46,10 @@ export default function Home() {
       visible: true,
     },
   } as MapVisibility)
-
   const [departements, setDepartements] =
     useState<FeatureCollection<Polygon, Departement>>(defaultDepartements)
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
   const [guesses, setGuesses] = useState(1)
-
-  const handleVisibilityToggle = (value: keyof MapVisibility) => () => {
-    setVisibility((_visibility) => ({
-      ..._visibility,
-      [value]: { ..._visibility[value], visible: !_visibility[value].visible },
-    }))
-  }
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
@@ -87,23 +92,30 @@ export default function Home() {
   }
 
   return (
-    <Stack direction='column' sx={{ flexGrow: 1 }}>
-      <Stack direction='column' sx={{ flexGrow: 1 }}>
-        <FranceMap
-          visibility={visibility}
-          onDepartementClick={onDepartementClick}
-          deps={departements}
-        />
-        <Toolbar />
-      </Stack>
-      <BottomMenuBar
-        visibility={visibility}
-        handleVisibilityToggle={handleVisibilityToggle}
-        target={target}
-        guesses={guesses}
-        departements={departements}
-        reset={reset}
-      />
-    </Stack>
+    <GameContext.Provider
+      value={{
+        visibility,
+        setVisibility,
+        target,
+        guesses,
+        departements,
+        reset,
+        onDepartementClick,
+      }}
+    >
+      {children}
+    </GameContext.Provider>
   )
 }
+
+const useGame = (): GameContextActions => {
+  const context = useContext(GameContext)
+
+  if (!context) {
+    throw new Error('useGame must be used within a GameContextProvider')
+  }
+
+  return context
+}
+
+export { GameProvider, useGame }

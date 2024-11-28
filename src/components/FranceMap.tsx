@@ -1,5 +1,4 @@
 import * as turf from '@turf/turf'
-import type { FeatureCollection, Polygon } from 'geojson'
 import { FilterSpecification, StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -13,6 +12,7 @@ import {
 } from 'react-map-gl/maplibre'
 import defaultMapStyle from '../assets/bright.json'
 import metropole from '../assets/metropole.geojson?raw'
+import { useGame } from '../contexts/game'
 import { Departement, MapVisibility } from '../types'
 
 // overlay layer masking out everything but france
@@ -111,7 +111,7 @@ const guessDepartementLayer: FillLayer = {
 
 // maxBounds for the map
 const maxBounds: [[number, number], [number, number]] = [
-  [-15, 38], // Southwest coordinates
+  [-15, 39], // Southwest coordinates
   [20, 53], // Northeast coordinates
 ]
 // Compute the difference between the polygon representing the maxBounds and the area of France
@@ -142,21 +142,15 @@ type HoverInfo = {
   dep?: Departement
 }
 
-interface MapProps {
-  visibility: MapVisibility
-  onDepartementClick: (dep: Departement) => void
-  deps: FeatureCollection<Polygon, Departement>
-}
-
-export default function FranceMap({ visibility, onDepartementClick, deps }: MapProps) {
+export default function FranceMap() {
+  const { visibility, onDepartementClick, departements } = useGame()
   const [viewState, setViewState] = useState({
-    longitude: 3,
+    longitude: 2.2,
     latitude: 46.4,
     zoom: 0,
   })
   const [mapStyle, setMapStyle] = useState(defaultMapStyle as StyleSpecification)
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>()
-  const [departements, setDepartements] = useState<FeatureCollection<Polygon, Departement>>(deps)
 
   const onHover = useCallback((event: MapLayerMouseEvent) => {
     const feature = event.features && event.features[0]
@@ -190,10 +184,6 @@ export default function FranceMap({ visibility, onDepartementClick, deps }: MapP
   useEffect(() => {
     setMapStyle(getMapStyle(visibility) as StyleSpecification)
   }, [visibility])
-
-  useEffect(() => {
-    setDepartements(deps)
-  }, [deps])
 
   return (
     <MapGL
