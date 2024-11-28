@@ -151,17 +151,18 @@ export default function FranceMap() {
   })
   const [mapStyle, setMapStyle] = useState(defaultMapStyle as StyleSpecification)
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>()
-  const [interactiveLayerIds, setInteractiveLayerIds] = useState(['departementsLayer'])
+  const [highlightedDep, setHighlightedDep] = useState<Departement>()
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
+      const feature = event.features && event.features[0]
+      setHoverInfo({
+        longitude: event.lngLat.lng,
+        latitude: event.lngLat.lat,
+        dep: feature && (feature.properties as Departement),
+      })
       if (gameMode === GameMode.Point) {
-        const feature = event.features && event.features[0]
-        setHoverInfo({
-          longitude: event.lngLat.lng,
-          latitude: event.lngLat.lat,
-          dep: feature && (feature.properties as Departement),
-        })
+        setHighlightedDep(feature && (feature.properties as Departement))
       }
     },
     [gameMode],
@@ -170,21 +171,20 @@ export default function FranceMap() {
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
       const feature = event.features && event.features[0]
-
-      if (feature) onDepartementClick(feature.properties as Departement)
+      if (feature && gameMode === GameMode.Point)
+        onDepartementClick(feature.properties as Departement)
     },
-    [onDepartementClick],
+    [gameMode, onDepartementClick],
   )
 
-  const selectedDep = hoverInfo && hoverInfo.dep
   const filter = useMemo(
     () =>
       [
         'all',
-        ['==', ['get', 'code'], selectedDep ? selectedDep.code : ''],
+        ['==', ['get', 'code'], highlightedDep ? highlightedDep.code : ''],
         ['==', ['get', 'found'], 0],
       ] as FilterSpecification,
-    [selectedDep],
+    [highlightedDep],
   )
 
   useEffect(() => {
@@ -192,17 +192,8 @@ export default function FranceMap() {
   }, [visibility])
 
   useEffect(() => {
-    if (gameMode === GameMode.Point) setInteractiveLayerIds(['departementsLayer'])
-    else setInteractiveLayerIds([])
-  }, [gameMode])
-
-  useEffect(() => {
     if (gameMode === GameMode.Name && target) {
-      setHoverInfo({
-        longitude: 0,
-        latitude: 0,
-        dep: target,
-      })
+      setHighlightedDep(target)
     }
   }, [gameMode, target])
 
@@ -217,7 +208,7 @@ export default function FranceMap() {
       maxZoom={8}
       onMouseMove={onHover}
       onClick={onClick}
-      interactiveLayerIds={interactiveLayerIds}
+      interactiveLayerIds={['departementsLayer']}
     >
       {franceOverlay && (
         <Source id='overlay' type='geojson' data={franceOverlay}>
@@ -257,7 +248,7 @@ export default function FranceMap() {
         </Source>
       )}
 
-      {selectedDep && selectedDep.found && (
+      {hoverInfo && hoverInfo.dep && hoverInfo.dep.found && (
         <Popup
           longitude={hoverInfo.longitude}
           latitude={hoverInfo.latitude}
@@ -265,7 +256,7 @@ export default function FranceMap() {
           closeButton={false}
           className='dep-info'
         >
-          {`${selectedDep.code} - ${selectedDep.nom}`}
+          {`${hoverInfo.dep.code} - ${hoverInfo.dep.nom}`}
         </Popup>
       )}
     </MapGL>
