@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import departementsGeoJson from '../assets/departements.geojson?raw'
-import { Departement, DepartementId, MapVisibility } from '../types'
+import { Departement, DepartementId, GameMode, MapVisibility } from '../types'
 
 const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
   Polygon,
@@ -23,10 +23,12 @@ type GameContextActions = {
   setVisibility: Dispatch<SetStateAction<MapVisibility>>
   departementsId: DepartementId
   setDepartementsId: Dispatch<SetStateAction<DepartementId>>
-  target: Departement | undefined
-  guesses: number
   maxGuesses: number
   setMaxGuesses: Dispatch<SetStateAction<number>>
+  gameMode: GameMode
+  setGameMode: Dispatch<SetStateAction<GameMode>>
+  target: Departement | undefined
+  guesses: number
   departements: FeatureCollection<Polygon, Departement>
   reset: () => void
   onDepartementClick: (departement: Departement) => void
@@ -69,6 +71,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   const [target, setTarget] = useState<Departement | undefined>(selectRandomTarget(departements))
   const [guesses, setGuesses] = useState(1)
   const [maxGuesses, setMaxGuesses] = useState(parseInt(localStorage.getItem('maxGuesses') ?? '3'))
+  const [gameMode, setGameMode] = useState(GameMode.Point)
 
   useEffect(() => {
     localStorage.setItem('maxGuesses', maxGuesses.toString())
@@ -132,6 +135,8 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
         setVisibility,
         departementsId,
         setDepartementsId,
+        gameMode,
+        setGameMode,
         target,
         guesses,
         maxGuesses,

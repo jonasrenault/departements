@@ -30,3 +30,8 @@ export type GameStats = {
   third: number
   error: number
 }
+
+export enum GameMode {
+  Point,
+  Name,
+}

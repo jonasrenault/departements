@@ -13,7 +13,7 @@ import {
 import defaultMapStyle from '../assets/bright.json'
 import metropole from '../assets/metropole.geojson?raw'
 import { useGame } from '../contexts/game'
-import { Departement, MapVisibility } from '../types'
+import { Departement, GameMode, MapVisibility } from '../types'
 
 // overlay layer masking out everything but france
 const overlayLayer: FillLayer = {
@@ -143,7 +143,7 @@ type HoverInfo = {
 }
 
 export default function FranceMap() {
-  const { visibility, onDepartementClick, departements } = useGame()
+  const { visibility, onDepartementClick, departements, gameMode, target } = useGame()
   const [viewState, setViewState] = useState({
     longitude: 2.2,
     latitude: 46.4,
@@ -151,15 +151,21 @@ export default function FranceMap() {
   })
   const [mapStyle, setMapStyle] = useState(defaultMapStyle as StyleSpecification)
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>()
+  const [interactiveLayerIds, setInteractiveLayerIds] = useState(['departementsLayer'])
 
-  const onHover = useCallback((event: MapLayerMouseEvent) => {
-    const feature = event.features && event.features[0]
-    setHoverInfo({
-      longitude: event.lngLat.lng,
-      latitude: event.lngLat.lat,
-      dep: feature && (feature.properties as Departement),
-    })
-  }, [])
+  const onHover = useCallback(
+    (event: MapLayerMouseEvent) => {
+      if (gameMode === GameMode.Point) {
+        const feature = event.features && event.features[0]
+        setHoverInfo({
+          longitude: event.lngLat.lng,
+          latitude: event.lngLat.lat,
+          dep: feature && (feature.properties as Departement),
+        })
+      }
+    },
+    [gameMode],
+  )
 
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -185,6 +191,21 @@ export default function FranceMap() {
     setMapStyle(getMapStyle(visibility) as StyleSpecification)
   }, [visibility])
 
+  useEffect(() => {
+    if (gameMode === GameMode.Point) setInteractiveLayerIds(['departementsLayer'])
+    else setInteractiveLayerIds([])
+  }, [gameMode])
+
+  useEffect(() => {
+    if (gameMode === GameMode.Name && target) {
+      setHoverInfo({
+        longitude: 0,
+        latitude: 0,
+        dep: target,
+      })
+    }
+  }, [gameMode, target])
+
   return (
     <MapGL
       {...viewState}
@@ -196,7 +217,7 @@ export default function FranceMap() {
       maxZoom={8}
       onMouseMove={onHover}
       onClick={onClick}
-      interactiveLayerIds={['departementsLayer']}
+      interactiveLayerIds={interactiveLayerIds}
     >
       {franceOverlay && (
         <Source id='overlay' type='geojson' data={franceOverlay}>

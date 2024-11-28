@@ -1,6 +1,7 @@
 import { AdsClick, EditNote, RestartAlt, Settings } from '@mui/icons-material'
 import {
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Checkbox,
@@ -27,15 +28,13 @@ import {
 import { ChangeEvent, forwardRef, Fragment, useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
-import { DepartementId, GameStats, MapVisibility } from '../types'
+import { Departement, DepartementId, GameMode, GameStats, MapVisibility } from '../types'
 
 const IdLabels = new Map([
   ['code', 'Code'],
   ['nom', 'Nom'],
   ['prefecture', 'Préfecture'],
 ])
-
-// const IdIcons = new Map([['code', <Pin />], ["nom", <Badge/>], ["prefecture", ]])
 
 function isOnlyCheckedValue(key: string, departementsId: DepartementId) {
   return !Object.entries(departementsId)
@@ -50,6 +49,8 @@ function SettingsMenu() {
     setVisibility,
     departementsId,
     setDepartementsId,
+    gameMode,
+    setGameMode,
     maxGuesses,
     setMaxGuesses,
     reset,
@@ -73,6 +74,10 @@ function SettingsMenu() {
     if (Object.values(newIds).some(Boolean)) {
       setDepartementsId(newIds)
     }
+  }
+
+  const handleGameModeToggle = (mode: GameMode) => () => {
+    setGameMode(mode)
   }
 
   const onMaxGuessesChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -131,11 +136,10 @@ function SettingsMenu() {
 
           <ListSubheader>Mode de jeu</ListSubheader>
           <ListItem disablePadding secondaryAction={<AdsClick />}>
-            <ListItemButton dense>
+            <ListItemButton dense onClick={handleGameModeToggle(GameMode.Point)}>
               <ListItemIcon>
                 <Radio
-                  checked={true}
-                  // onChange={handleChange}
+                  checked={gameMode === GameMode.Point}
                   value='a'
                   name='radio-game-mode'
                   inputProps={{ 'aria-label': 'A' }}
@@ -145,11 +149,10 @@ function SettingsMenu() {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding secondaryAction={<EditNote />}>
-            <ListItemButton dense>
+            <ListItemButton dense onClick={handleGameModeToggle(GameMode.Name)}>
               <ListItemIcon>
                 <Radio
-                  checked={false}
-                  // onChange={handleChange}
+                  checked={gameMode === GameMode.Name}
                   value='b'
                   name='radio-game-mode'
                   inputProps={{ 'aria-label': 'B' }}
@@ -212,8 +215,19 @@ const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
 })
 
 export default function GameMenuBar() {
-  const { departementsId, target, guesses, maxGuesses, departements, reset } = useGame()
+  const {
+    departementsId,
+    target,
+    guesses,
+    maxGuesses,
+    departements,
+    gameMode,
+    reset,
+    onDepartementClick,
+  } = useGame()
   const [stats, setStats] = useState<GameStats>()
+  const [comboValue, setComboValue] = useState<Departement | null>(null)
+  const [comboInputValue, setComboInputValue] = useState('')
 
   useEffect(() => {
     setStats({
@@ -226,11 +240,11 @@ export default function GameMenuBar() {
     })
   }, [departements])
 
-  const targetLabel = () => {
+  const getLabel = (departement?: Departement) => {
     let label = ''
-    if (target) {
-      if (departementsId.code) label += target.code
-      if (departementsId.nom) label += (departementsId.code ? ' - ' : '') + target.nom
+    if (departement) {
+      if (departementsId.code) label += departement.code
+      if (departementsId.nom) label += (departementsId.code ? ' - ' : '') + departement.nom
     }
     return label
   }
@@ -246,23 +260,61 @@ export default function GameMenuBar() {
         <Box>
           <Stack direction='row' sx={{ alignItems: 'center' }}>
             {target ? (
-              <>
-                <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
-                  Cliquez sur le département{' '}
-                  <span style={{ fontWeight: 'bold' }}>{targetLabel()}</span>
-                </Typography>
-                <Tooltip
-                  title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
-                  sx={{ ml: 2 }}
-                >
-                  <Chip
-                    icon={<AdsClick />}
-                    label={maxGuesses - guesses + 1}
-                    color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
+              gameMode === GameMode.Point ? (
+                <>
+                  <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
+                    Cliquez sur le département{' '}
+                    <span style={{ fontWeight: 'bold' }}>{getLabel(target)}</span>
+                  </Typography>
+                  <Tooltip
+                    title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
+                    sx={{ ml: 2 }}
+                  >
+                    <Chip
+                      icon={<AdsClick />}
+                      label={maxGuesses - guesses + 1}
+                      color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
+                      size='small'
+                    />
+                  </Tooltip>
+                </>
+              ) : (
+                <>
+                  <Typography variant='subtitle1' component='div' sx={{ color: 'inherit' }}>
+                    Identifiez le département surligné :
+                  </Typography>
+                  <Autocomplete
+                    // disablePortal
+                    autoHighlight
+                    options={departements.features
+                      .filter((feature) => !feature.properties.found)
+                      .map((feature) => feature.properties)}
+                    getOptionLabel={getLabel}
+                    onChange={(_, newValue: Departement | null) => {
+                      if (newValue) {
+                        onDepartementClick(newValue)
+                        setComboValue(null)
+                        setComboInputValue('')
+                      }
+                    }}
+                    value={comboValue}
+                    inputValue={comboInputValue}
+                    onInputChange={(_, newInputValue) => {
+                      setComboInputValue(newInputValue)
+                    }}
+                    sx={{
+                      width: 300,
+                      color: 'inherit',
+                      '& .MuiInputBase-root': {
+                        bgcolor: 'background.paper',
+                      },
+                      ml: 2,
+                    }}
                     size='small'
+                    renderInput={(params) => <TextField {...params} />}
                   />
-                </Tooltip>
-              </>
+                </>
+              )
             ) : (
               <Button
                 variant='contained'
