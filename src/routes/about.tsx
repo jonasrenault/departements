@@ -48,9 +48,6 @@ export default function AboutPage() {
             (pointer le département, nommer le département) ainsi que des options pour personnaliser
             l'affichage.
           </Typography>
-          <Typography variant='h5' sx={{ pt: 3, pb: 2 }}>
-            Historique
-          </Typography>
           <GameHistory />
         </CardContent>
         <CardActions sx={{ display: 'flex' }}>

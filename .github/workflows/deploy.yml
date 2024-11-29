@@ -1,10 +1,7 @@
 name: Deploy app to Github Pages
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ['main']
-
+  # Only run when test workflow has completed on main branch
   workflow_run:
     workflows: ['Test']
     branches: [main]
@@ -32,6 +29,8 @@ env: # environment variables (available in any part of the action)
 jobs:
   # Build job
   build:
+    name: build and push to gh pages
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: build
     runs-on: ubuntu-latest

@@ -6,6 +6,7 @@ export function loadGameHistory(): GameHistory[] {
     if (key === 'date') return new Date(value)
     return value
   })
+  console.log('Loading history', history)
   return history
 }
 

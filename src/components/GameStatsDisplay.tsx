@@ -12,7 +12,7 @@ import { forwardRef } from 'react'
 import { GameStats } from '../types'
 
 const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
-  props: CircularProgressProps & { value: number; labelColor: string },
+  props: CircularProgressProps & { value: number; labelcolor: string },
   ref,
 ) {
   return (
@@ -33,7 +33,7 @@ const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
         <Typography
           variant='caption'
           component='div'
-          sx={{ color: props.labelColor }}
+          sx={{ color: props.labelcolor }}
         >{`${Math.round(props.value)}%`}</Typography>
       </Box>
     </Box>
@@ -44,14 +44,14 @@ interface GameStatsDisplayProps {
   stats?: GameStats
   maxGuesses: number
   sx?: SxProps<Theme>
-  labelColor?: string
+  labelcolor?: string
 }
 
 export default function GameStatsDisplay({
   stats,
   maxGuesses,
   sx = [],
-  labelColor = '#ffffff',
+  labelcolor = '#ffffff',
 }: GameStatsDisplayProps) {
   return (
     <Stack
@@ -63,7 +63,7 @@ export default function GameStatsDisplay({
           <CircularProgressWithLabel
             value={stats ? (stats.correct / stats.total) * 100 : 0}
             color='inherit'
-            labelColor={labelColor}
+            labelcolor={labelcolor}
           />
         </Tooltip>
       </Box>
@@ -73,7 +73,7 @@ export default function GameStatsDisplay({
             <CircularProgressWithLabel
               value={stats ? (stats.second / stats.total) * 100 : 0}
               color='inherit'
-              labelColor={labelColor}
+              labelcolor={labelcolor}
             />
           </Tooltip>
         </Box>
@@ -84,7 +84,7 @@ export default function GameStatsDisplay({
             <CircularProgressWithLabel
               value={stats ? (stats.third / stats.total) * 100 : 0}
               color='inherit'
-              labelColor={labelColor}
+              labelcolor={labelcolor}
             />
           </Tooltip>
         </Box>
@@ -94,7 +94,7 @@ export default function GameStatsDisplay({
           <CircularProgressWithLabel
             value={stats ? (stats.error / stats.total) * 100 : 0}
             color='inherit'
-            labelColor={labelColor}
+            labelcolor={labelcolor}
           />
         </Tooltip>
       </Box>
