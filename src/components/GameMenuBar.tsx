@@ -29,6 +29,7 @@ import { ChangeEvent, forwardRef, Fragment, useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
 import { Departement, DepartementId, GameMode, GameStats, MapVisibility } from '../types'
+import logo from '/logo_transparent.png'
 
 const IdLabels = new Map([
   ['code', 'Code'],
@@ -252,17 +253,28 @@ export default function GameMenuBar() {
   return (
     <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
       <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography
-          component='h1'
-          variant='h6'
-          color='inherit'
-          noWrap
-          sx={{ display: { sm: 'none', md: 'inherit' } }}
-        >
-          <Link component={NavLink} to='/' color='inherit' underline='none'>
-            Quiz Départements
-          </Link>
-        </Typography>
+        <Link component={NavLink} to='/' color='inherit' underline='none'>
+          <Stack direction='row' sx={{ alignItems: 'center' }}>
+            <Box
+              component='img'
+              sx={{
+                height: 64,
+                mr: 2,
+              }}
+              alt='Quiz Départements'
+              src={logo}
+            />
+            <Typography
+              component='h1'
+              variant='h6'
+              color='inherit'
+              noWrap
+              sx={{ display: { sm: 'none', md: 'inherit' } }}
+            >
+              Quiz Départements
+            </Typography>
+          </Stack>
+        </Link>
         <Box>
           <Stack direction='row' sx={{ alignItems: 'center' }}>
             {target ? (
