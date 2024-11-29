@@ -1,9 +1,11 @@
 <div align="center">
-  <img alt="Quiz Départements logo" src="public/logo_with_title.png" style="width:50%;">
+  <a href="https://jrenault.fr/departements">
+    <img alt="Quiz Départements logo" src="public/logo_with_title.png" style="width:50%;">
+  </a>
 </div>
 
 <p align="center">
-<a href="LICENSE" rel="nofollow"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" style="max-width:100%;"></a>
+<a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" style="max-width:100%;"></a>
 </p>
 
 <p align="center">
