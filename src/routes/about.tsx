@@ -13,19 +13,13 @@ import {
 } from '@mui/material'
 import { Link, Link as RouterLink } from 'react-router'
 import logo from '/logo_with_title.png'
+import GameHistory from '../components/GameHistory'
 
 export default function AboutPage() {
   return (
     <Container
       maxWidth='md'
-      //   disableGutters
       sx={{
-        // backgroundColor: (theme) =>
-        //   theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900],
-        // minHeight: '100vh',
-        // display: 'flex',
-        // alignItems: 'center',
-        // justifyContent: 'center',
         padding: 5,
       }}
     >
@@ -54,6 +48,10 @@ export default function AboutPage() {
             (pointer le département, nommer le département) ainsi que des options pour personnaliser
             l'affichage.
           </Typography>
+          <Typography variant='h5' sx={{ pt: 3, pb: 2 }}>
+            Historique
+          </Typography>
+          <GameHistory />
         </CardContent>
         <CardActions sx={{ display: 'flex' }}>
           <Button variant='outlined' size='large' component={RouterLink} to='/'>

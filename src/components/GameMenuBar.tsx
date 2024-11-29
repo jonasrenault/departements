@@ -6,8 +6,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
-  CircularProgressProps,
   Divider,
   Drawer,
   IconButton,
@@ -25,10 +23,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { ChangeEvent, forwardRef, Fragment, useEffect, useState } from 'react'
+import { ChangeEvent, Fragment, useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
 import { Departement, DepartementId, GameMode, GameStats, MapVisibility } from '../types'
+import { computeStats } from '../utils'
+import GameStatsDisplay from './GameStatsDisplay'
 import logo from '/logo_transparent.png'
 
 const IdLabels = new Map([
@@ -186,35 +186,6 @@ function SettingsMenu() {
   )
 }
 
-const CircularProgressWithLabel = forwardRef(function CircularProgressWithLabel(
-  props: CircularProgressProps & { value: number },
-  ref,
-) {
-  return (
-    <Box sx={{ position: 'relative', display: 'inline-flex' }} {...props} ref={ref}>
-      <CircularProgress variant='determinate' {...props} />
-      <Box
-        sx={{
-          top: 0,
-          left: 0,
-          bottom: 0,
-          right: 0,
-          position: 'absolute',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Typography
-          variant='caption'
-          component='div'
-          sx={{ color: '#ffffff' }}
-        >{`${Math.round(props.value)}%`}</Typography>
-      </Box>
-    </Box>
-  )
-})
-
 export default function GameMenuBar() {
   const {
     departementsId,
@@ -231,14 +202,7 @@ export default function GameMenuBar() {
   const [comboInputValue, setComboInputValue] = useState('')
 
   useEffect(() => {
-    setStats({
-      total: departements.features.length,
-      seen: departements.features.filter((f) => f.properties.found).length,
-      correct: departements.features.filter((f) => f.properties.found === 1).length,
-      second: departements.features.filter((f) => f.properties.found === 2).length,
-      third: departements.features.filter((f) => f.properties.found === 3).length,
-      error: departements.features.filter((f) => f.properties.found === 4).length,
-    })
+    setStats(computeStats(departements.features.map((f) => f.properties)))
   }, [departements])
 
   const getLabel = (departement?: Departement) => {
@@ -296,7 +260,6 @@ export default function GameMenuBar() {
                       Identifiez le département surligné :
                     </Typography>
                     <Autocomplete
-                      // disablePortal
                       autoHighlight
                       options={departements.features
                         .filter((feature) => !feature.properties.found)
@@ -353,44 +316,7 @@ export default function GameMenuBar() {
         </Box>
 
         <Stack direction='row' sx={{ justifyContent: 'end', alignItems: 'center' }}>
-          <Stack direction='row' sx={{ justifyContent: 'center', alignItems: 'center', mr: 2 }}>
-            <Box sx={{ color: '#059669', display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={`Réponses correctes (${stats?.correct} / ${stats?.total})`}>
-                <CircularProgressWithLabel
-                  value={stats ? (stats.correct / stats.total) * 100 : 0}
-                  color='inherit'
-                />
-              </Tooltip>
-            </Box>
-            {maxGuesses > 1 && (
-              <Box sx={{ color: '#0891B2', display: 'flex', alignItems: 'center' }}>
-                <Tooltip title={`Réponses au deuxième essai (${stats?.second} / ${stats?.total})`}>
-                  <CircularProgressWithLabel
-                    value={stats ? (stats.second / stats.total) * 100 : 0}
-                    color='inherit'
-                  />
-                </Tooltip>
-              </Box>
-            )}
-            {maxGuesses > 2 && (
-              <Box sx={{ color: '#DB2777', display: 'flex', alignItems: 'center' }}>
-                <Tooltip title={`Réponses au troisième essai (${stats?.third} / ${stats?.total})`}>
-                  <CircularProgressWithLabel
-                    value={stats ? (stats.third / stats.total) * 100 : 0}
-                    color='inherit'
-                  />
-                </Tooltip>
-              </Box>
-            )}
-            <Box sx={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={`Mauvaises réponses (${stats?.error} / ${stats?.total})`}>
-                <CircularProgressWithLabel
-                  value={stats ? (stats.error / stats.total) * 100 : 0}
-                  color='inherit'
-                />
-              </Tooltip>
-            </Box>
-          </Stack>
+          <GameStatsDisplay stats={stats} maxGuesses={maxGuesses} sx={{ mr: 1 }} />
           <SettingsMenu />
         </Stack>
       </Toolbar>

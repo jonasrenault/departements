@@ -35,3 +35,12 @@ export enum GameMode {
   Point,
   Name,
 }
+
+export type GameHistory = {
+  id: string
+  maxGuesses: number
+  departements: Departement[]
+  ids: DepartementId
+  mode: GameMode
+  date: Date
+}

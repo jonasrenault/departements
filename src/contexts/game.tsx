@@ -9,8 +9,10 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import departementsGeoJson from '../assets/departements.geojson?raw'
 import { Departement, DepartementId, GameMode, MapVisibility } from '../types'
+import { saveGameHistory } from '../utils'
 
 const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
   Polygon,
@@ -74,6 +76,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   const [gameMode, setGameMode] = useState(
     GameMode[(localStorage.getItem('gameMode') ?? 'Point') as keyof typeof GameMode],
   )
+  const [gameId, setGameId] = useState(uuidv4())
 
   useEffect(() => {
     localStorage.setItem('maxGuesses', maxGuesses.toString())
@@ -95,6 +98,14 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     localStorage.setItem(`gameMode`, GameMode[gameMode])
     reset()
   }, [gameMode])
+
+  useEffect(() => {
+    if (departements) {
+      const possible = departements.features.filter((feature) => !feature.properties.found)
+      if (possible.length === 0)
+        saveGameHistory(gameId, departements, gameMode, maxGuesses, departementsId)
+    }
+  }, [departements, gameMode, maxGuesses, departementsId, gameId])
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
@@ -133,6 +144,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     setDepartements(defaultDepartements)
     setTarget(selectRandomTarget(defaultDepartements))
     setGuesses(1)
+    setGameId(uuidv4())
   }
 
   return (
