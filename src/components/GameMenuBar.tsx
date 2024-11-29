@@ -253,7 +253,7 @@ export default function GameMenuBar() {
   return (
     <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
       <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link component={NavLink} to='/' color='inherit' underline='none'>
+        <Link component={NavLink} to='/about' color='inherit' underline='none'>
           <Stack direction='row' sx={{ alignItems: 'center' }}>
             <Box
               component='img'
