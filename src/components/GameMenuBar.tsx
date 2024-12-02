@@ -58,6 +58,7 @@ function SettingsMenu() {
   } = useGame()
   const [open, setOpen] = useState(false)
   const [maxGuessesError, setMaxGuessesError] = useState('')
+  const [maxGuessesInput, setMaxGuessesInput] = useState(maxGuesses.toString())
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen)
@@ -82,6 +83,7 @@ function SettingsMenu() {
   }
 
   const onMaxGuessesChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setMaxGuessesInput(event.target.value)
     const value = parseInt(event.target.value)
     if (1 <= value && value <= 3) {
       setMaxGuesses(value)
@@ -170,7 +172,7 @@ function SettingsMenu() {
               variant='outlined'
               type='number'
               fullWidth
-              value={maxGuesses}
+              value={maxGuessesInput}
               onChange={onMaxGuessesChange}
               error={Boolean(maxGuessesError)}
               helperText={maxGuessesError}
