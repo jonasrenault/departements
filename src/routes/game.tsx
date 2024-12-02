@@ -9,7 +9,7 @@ export default function Game() {
       <Stack direction='column' sx={{ flexGrow: 1 }}>
         <Stack direction='column' sx={{ flexGrow: 1 }}>
           <FranceMap />
-          <Toolbar />
+          <Toolbar sx={{ minHeight: { xs: 104, md: 64 } }} />
         </Stack>
         <GameMenuBar />
       </Stack>

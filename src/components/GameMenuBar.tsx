@@ -216,13 +216,26 @@ export default function GameMenuBar() {
 
   return (
     <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
-      <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link component={NavLink} to='/about' color='inherit' underline='none'>
+      <Toolbar
+        sx={{
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          p: { xs: 1, md: 0 },
+        }}
+      >
+        <Link
+          component={NavLink}
+          to='/about'
+          color='inherit'
+          underline='none'
+          sx={{ order: { xs: 2, md: 1 } }}
+        >
           <Stack direction='row' sx={{ alignItems: 'center' }}>
             <Box
               component='img'
               sx={{
-                height: 64,
+                height: 48,
                 mr: 2,
               }}
               alt='Quiz Départements'
@@ -233,20 +246,20 @@ export default function GameMenuBar() {
               variant='h6'
               color='inherit'
               noWrap
-              sx={{ display: { sm: 'none', md: 'inherit' } }}
+              sx={{ display: { xs: 'none', md: 'inherit' } }}
             >
               Quiz Départements
             </Typography>
           </Stack>
         </Link>
-        <Box>
-          <Stack direction='row' sx={{ alignItems: 'center' }}>
+        <Box sx={{ order: { xs: 1, md: 2 }, flex: { xs: '0 0 100%', md: 'auto' } }}>
+          <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'center' }}>
             {target ? (
               <>
                 {gameMode === GameMode.Point ? (
                   <Typography
                     component='div'
-                    sx={{ color: 'inherit', typography: { sm: 'caption', md: 'body1' } }}
+                    sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
                   >
                     Cliquez sur le département{' '}
                     <span style={{ fontWeight: 'bold' }}>{getLabel(target)}</span>
@@ -255,7 +268,7 @@ export default function GameMenuBar() {
                   <>
                     <Typography
                       component='div'
-                      sx={{ color: 'inherit', typography: { sm: 'caption', md: 'body1' } }}
+                      sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
                     >
                       Identifiez le département surligné :
                     </Typography>
@@ -278,7 +291,7 @@ export default function GameMenuBar() {
                         setComboInputValue(newInputValue)
                       }}
                       sx={{
-                        width: { sm: 200, md: 300 },
+                        width: { xs: 200, md: 300 },
                         color: 'inherit',
                         '& .MuiInputBase-root': {
                           bgcolor: 'background.paper',
@@ -315,7 +328,10 @@ export default function GameMenuBar() {
           </Stack>
         </Box>
 
-        <Stack direction='row' sx={{ justifyContent: 'end', alignItems: 'center' }}>
+        <Stack
+          direction='row'
+          sx={{ justifyContent: 'end', alignItems: 'center', order: { xs: 2, md: 3 } }}
+        >
           <GameStatsDisplay stats={stats} maxGuesses={maxGuesses} sx={{ mr: 1 }} />
           <SettingsMenu />
         </Stack>
