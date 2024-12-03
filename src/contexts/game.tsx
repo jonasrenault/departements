@@ -124,7 +124,7 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
   }
 
   const setNumberOfTargets = (nbTargets: number) => {
-    if (0 < nbTargets && nbTargets < defaultDepartements.features.length) {
+    if (0 < nbTargets && nbTargets <= defaultDepartements.features.length) {
       _setNumberOfTargets(nbTargets)
       reset(nbTargets)
     }

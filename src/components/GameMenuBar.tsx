@@ -215,16 +215,16 @@ function SettingsMenu() {
                 label='Départements à trouver'
                 onChange={onNbTargetsChange}
               >
-                <MenuItem value={10}>Dix</MenuItem>
-                <MenuItem value={20}>Vingt</MenuItem>
-                <MenuItem value={30}>Trente</MenuItem>
-                <MenuItem value={40}>Quarante</MenuItem>
-                <MenuItem value={50}>Cinquante</MenuItem>
-                <MenuItem value={60}>Soixante</MenuItem>
-                <MenuItem value={70}>Soixante-dix</MenuItem>
-                <MenuItem value={80}>Quatre-vingt</MenuItem>
-                <MenuItem value={90}>Quatre-vingt-dix</MenuItem>
-                <MenuItem value={96}>Tous</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+                <MenuItem value={30}>30</MenuItem>
+                <MenuItem value={40}>40</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+                <MenuItem value={60}>60</MenuItem>
+                <MenuItem value={70}>70</MenuItem>
+                <MenuItem value={80}>80</MenuItem>
+                <MenuItem value={90}>90</MenuItem>
+                <MenuItem value={defaultDepartements.features.length}>Tous</MenuItem>
               </Select>
             </FormControl>
           </ListItem>
