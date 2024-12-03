@@ -6,7 +6,6 @@ export function loadGameHistory(): GameHistory[] {
     if (key === 'date') return new Date(value)
     return value
   })
-  console.log('Loading history', history)
   return history
 }
 
@@ -16,6 +15,7 @@ export function saveGameHistory(
   gameMode: GameMode,
   maxGuesses: number,
   ids: DepartementId,
+  numberOfTargets: number,
 ) {
   const history = loadGameHistory()
   const duplicate = history.filter((game) => game.id === gameId)
@@ -27,6 +27,7 @@ export function saveGameHistory(
       maxGuesses,
       departements: departements.features.map((feature) => feature.properties),
       date: new Date(),
+      numberOfTargets,
     }
     history.push(gameHistory)
     localStorage.setItem('history', JSON.stringify(history))
@@ -35,11 +36,11 @@ export function saveGameHistory(
 
 export function computeStats(departements: Departement[]): GameStats {
   return {
-    total: departements.length,
-    seen: departements.filter((d) => d.found).length,
-    correct: departements.filter((d) => d.found === 1).length,
-    second: departements.filter((d) => d.found === 2).length,
-    third: departements.filter((d) => d.found === 3).length,
-    error: departements.filter((d) => d.found === 4).length,
+    total: departements.filter((d) => d.active).length,
+    seen: departements.filter((d) => d.active && d.found).length,
+    correct: departements.filter((d) => d.active && d.found === 1).length,
+    second: departements.filter((d) => d.active && d.found === 2).length,
+    third: departements.filter((d) => d.active && d.found === 3).length,
+    error: departements.filter((d) => d.active && d.found === 4).length,
   }
 }

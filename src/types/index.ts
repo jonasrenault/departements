@@ -18,6 +18,9 @@ export type DepartementId = {
 export type Departement = {
   code: string
   nom: string
+  region: string
+  prefecture: string
+  active?: boolean
   found?: number
   guess?: boolean
 }
@@ -43,4 +46,5 @@ export type GameHistory = {
   ids: DepartementId
   mode: GameMode
   date: Date
+  numberOfTargets: number
 }

@@ -18,7 +18,18 @@ const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection
   Polygon,
   Departement
 >
-defaultDepartements.features.forEach((feature) => (feature.properties.found = 0))
+defaultDepartements.features.forEach((feature) => {
+  feature.properties.found = 0
+  feature.properties.active = true
+})
+
+const shuffleDepartements = (nbTargets: number) => {
+  defaultDepartements.features.sort(() => 0.5 - Math.random())
+  // set first nbTargets departements as active
+  defaultDepartements.features.forEach(
+    (feature, index) => (feature.properties.active = index < nbTargets),
+  )
+}
 
 type GameContextActions = {
   visibility: MapVisibility
@@ -29,6 +40,8 @@ type GameContextActions = {
   setMaxGuesses: Dispatch<SetStateAction<number>>
   gameMode: GameMode
   setGameMode: Dispatch<SetStateAction<GameMode>>
+  numberOfTargets: number
+  setNumberOfTargets: (numberOfTargets: number) => void
   target: Departement | undefined
   guesses: number
   departements: FeatureCollection<Polygon, Departement>
@@ -45,7 +58,9 @@ interface GameContextProviderProps {
 function selectRandomTarget(
   departements?: FeatureCollection<Polygon, Departement>,
 ): Departement | undefined {
-  const possible = departements?.features.filter((feature) => !feature.properties.found)
+  const possible = departements?.features.filter(
+    (feature) => feature.properties.active && !feature.properties.found,
+  )
   if (possible && possible.length)
     return possible[Math.floor(Math.random() * possible.length)].properties
 }
@@ -77,35 +92,11 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     GameMode[(localStorage.getItem('gameMode') ?? 'Point') as keyof typeof GameMode],
   )
   const [gameId, setGameId] = useState(uuidv4())
-
-  useEffect(() => {
-    localStorage.setItem('maxGuesses', maxGuesses.toString())
-  }, [maxGuesses])
-
-  useEffect(() => {
-    Object.entries(visibility).forEach(([key, value]) =>
-      localStorage.setItem(`visibility-${key}`, String(value.visible)),
-    )
-  }, [visibility])
-
-  useEffect(() => {
-    Object.entries(departementsId).forEach(([key, value]) =>
-      localStorage.setItem(`ids-${key}`, String(value)),
-    )
-  }, [departementsId])
-
-  useEffect(() => {
-    localStorage.setItem(`gameMode`, GameMode[gameMode])
-    reset()
-  }, [gameMode])
-
-  useEffect(() => {
-    if (departements) {
-      const possible = departements.features.filter((feature) => !feature.properties.found)
-      if (possible.length === 0)
-        saveGameHistory(gameId, departements, gameMode, maxGuesses, departementsId)
-    }
-  }, [departements, gameMode, maxGuesses, departementsId, gameId])
+  const [numberOfTargets, _setNumberOfTargets] = useState(
+    parseInt(
+      localStorage.getItem('numberOfTargets') ?? defaultDepartements.features.length.toString(),
+    ),
+  )
 
   const onDepartementClick = (departement: Departement) => {
     if (target) {
@@ -140,12 +131,55 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
     }
   }
 
-  const reset = () => {
+  const setNumberOfTargets = (nbTargets: number) => {
+    if (0 < nbTargets && nbTargets < defaultDepartements.features.length) {
+      _setNumberOfTargets(nbTargets)
+      reset(nbTargets)
+    }
+  }
+
+  const reset = (nbTargets?: number) => {
+    shuffleDepartements(nbTargets ?? numberOfTargets)
     setDepartements(defaultDepartements)
     setTarget(selectRandomTarget(defaultDepartements))
     setGuesses(1)
     setGameId(uuidv4())
   }
+
+  useEffect(() => {
+    localStorage.setItem('maxGuesses', maxGuesses.toString())
+  }, [maxGuesses])
+
+  useEffect(() => {
+    Object.entries(visibility).forEach(([key, value]) =>
+      localStorage.setItem(`visibility-${key}`, String(value.visible)),
+    )
+  }, [visibility])
+
+  useEffect(() => {
+    Object.entries(departementsId).forEach(([key, value]) =>
+      localStorage.setItem(`ids-${key}`, String(value)),
+    )
+  }, [departementsId])
+
+  useEffect(() => {
+    localStorage.setItem('numberOfTargets', numberOfTargets.toString())
+  }, [numberOfTargets])
+
+  useEffect(() => {
+    localStorage.setItem(`gameMode`, GameMode[gameMode])
+    reset()
+  }, [gameMode])
+
+  useEffect(() => {
+    if (departements) {
+      const possible = departements.features.filter(
+        (feature) => feature.properties.active && !feature.properties.found,
+      )
+      if (possible.length === 0)
+        saveGameHistory(gameId, departements, gameMode, maxGuesses, departementsId, numberOfTargets)
+    }
+  }, [departements, gameMode, maxGuesses, departementsId, gameId, numberOfTargets])
 
   return (
     <GameContext.Provider
@@ -156,6 +190,8 @@ const GameProvider: FC<GameContextProviderProps> = ({ children }) => {
         setDepartementsId,
         gameMode,
         setGameMode,
+        numberOfTargets,
+        setNumberOfTargets,
         target,
         guesses,
         maxGuesses,

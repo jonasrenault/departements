@@ -8,7 +8,9 @@ import {
   Chip,
   Divider,
   Drawer,
+  FormControl,
   IconButton,
+  InputLabel,
   Link,
   List,
   ListItem,
@@ -16,7 +18,10 @@ import {
   ListItemIcon,
   ListItemText,
   ListSubheader,
+  MenuItem,
   Radio,
+  Select,
+  SelectChangeEvent,
   Stack,
   TextField,
   Toolbar,
@@ -54,6 +59,8 @@ function SettingsMenu() {
     setGameMode,
     maxGuesses,
     setMaxGuesses,
+    numberOfTargets,
+    setNumberOfTargets,
     reset,
   } = useGame()
   const [open, setOpen] = useState(false)
@@ -91,6 +98,11 @@ function SettingsMenu() {
     } else {
       setMaxGuessesError("Le nombre d'essais doit être compris entre 1 et 3.")
     }
+  }
+
+  const onNbTargetsChange = (event: SelectChangeEvent<number>) => {
+    const value = event.target.value
+    setNumberOfTargets(value as number)
   }
 
   return (
@@ -177,6 +189,29 @@ function SettingsMenu() {
               error={Boolean(maxGuessesError)}
               helperText={maxGuessesError}
             />
+          </ListItem>
+          <ListItem>
+            <FormControl fullWidth>
+              <InputLabel id='nbTargets-select-label'>Départements à trouver</InputLabel>
+              <Select
+                labelId='nbTargets-select-label'
+                id='nbTargets-select'
+                value={numberOfTargets}
+                label='Départements à trouver'
+                onChange={onNbTargetsChange}
+              >
+                <MenuItem value={10}>Dix</MenuItem>
+                <MenuItem value={20}>Vingt</MenuItem>
+                <MenuItem value={30}>Trente</MenuItem>
+                <MenuItem value={40}>Quarante</MenuItem>
+                <MenuItem value={50}>Cinquante</MenuItem>
+                <MenuItem value={60}>Soixante</MenuItem>
+                <MenuItem value={70}>Soixante-dix</MenuItem>
+                <MenuItem value={80}>Quatre-vingt</MenuItem>
+                <MenuItem value={90}>Quatre-vingt-dix</MenuItem>
+                <MenuItem value={96}>Tous</MenuItem>
+              </Select>
+            </FormControl>
           </ListItem>
         </List>
 
@@ -277,8 +312,9 @@ export default function GameMenuBar() {
                     <Autocomplete
                       autoHighlight
                       options={departements.features
-                        .filter((feature) => !feature.properties.found)
-                        .map((feature) => feature.properties)}
+                        // .filter((feature) => feature.properties.active && !feature.properties.found)
+                        .map((feature) => feature.properties)
+                        .sort((a, b) => a.code.localeCompare(b.code))}
                       getOptionLabel={getLabel}
                       onChange={(_, newValue: Departement | null) => {
                         if (newValue) {
