@@ -1,5 +1,19 @@
 import type { FeatureCollection, Polygon } from 'geojson'
+import departementsGeoJson from '../assets/departements.geojson?raw'
 import { Departement, DepartementId, GameHistory, GameMode, GameStats } from '../types'
+
+export function loadDefaultDepartments(): FeatureCollection<Polygon, Departement> {
+  const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
+    Polygon,
+    Departement
+  >
+  defaultDepartements.features.forEach((feature) => {
+    feature.properties.found = 0
+    feature.properties.active = true
+    feature.properties.guess = false
+  })
+  return defaultDepartements
+}
 
 export function loadGameHistory(): GameHistory[] {
   const history = JSON.parse(localStorage.getItem('history') ?? '[]', (key, value) => {

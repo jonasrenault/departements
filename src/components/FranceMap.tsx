@@ -194,7 +194,7 @@ export default function FranceMap() {
   }, [visibility])
 
   useEffect(() => {
-    if (gameMode === GameMode.Name && target) {
+    if (gameMode !== GameMode.Point && target) {
       setHighlightedDep(target)
     }
   }, [gameMode, target])
@@ -256,11 +256,7 @@ export default function FranceMap() {
             {...errorDepartementLayer}
             filter={['>', ['get', 'found'], 3]}
           />
-          <Layer
-            beforeId='place-town'
-            {...guessDepartementLayer}
-            filter={['boolean', ['get', 'guess']]}
-          />
+          <Layer beforeId='place-town' {...guessDepartementLayer} filter={['get', 'guess']} />
         </Source>
       )}
 

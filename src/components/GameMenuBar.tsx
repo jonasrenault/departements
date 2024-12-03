@@ -1,4 +1,4 @@
-import { AdsClick, EditNote, RestartAlt, Settings } from '@mui/icons-material'
+import { AdsClick, EditNote, RestartAlt, Settings, Share } from '@mui/icons-material'
 import {
   AppBar,
   Autocomplete,
@@ -28,13 +28,15 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { ChangeEvent, Fragment, useEffect, useState } from 'react'
+import { ChangeEvent, Fragment, useEffect, useMemo, useState } from 'react'
 import { NavLink } from 'react-router'
 import { useGame } from '../contexts/game'
 import { Departement, DepartementId, GameMode, GameStats, MapVisibility } from '../types'
-import { computeStats } from '../utils'
+import { computeStats, loadDefaultDepartments } from '../utils'
 import GameStatsDisplay from './GameStatsDisplay'
 import logo from '/logo_transparent.png'
+
+const defaultDepartements = loadDefaultDepartments()
 
 const IdLabels = new Map([
   ['code', 'Code'],
@@ -155,7 +157,7 @@ function SettingsMenu() {
               <ListItemIcon>
                 <Radio
                   checked={gameMode === GameMode.Point}
-                  value='a'
+                  value='point'
                   name='radio-game-mode'
                   inputProps={{ 'aria-label': 'A' }}
                 />
@@ -168,12 +170,25 @@ function SettingsMenu() {
               <ListItemIcon>
                 <Radio
                   checked={gameMode === GameMode.Name}
-                  value='b'
+                  value='name'
                   name='radio-game-mode'
                   inputProps={{ 'aria-label': 'B' }}
                 />
               </ListItemIcon>
               <ListItemText>Nommer</ListItemText>
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding secondaryAction={<Share />}>
+            <ListItemButton dense onClick={handleGameModeToggle(GameMode.Pick)}>
+              <ListItemIcon>
+                <Radio
+                  checked={gameMode === GameMode.Pick}
+                  value='pick'
+                  name='radio-game-mode'
+                  inputProps={{ 'aria-label': 'B' }}
+                />
+              </ListItemIcon>
+              <ListItemText>Choisir</ListItemText>
             </ListItemButton>
           </ListItem>
 
@@ -215,7 +230,12 @@ function SettingsMenu() {
           </ListItem>
         </List>
 
-        <Button variant='outlined' onClick={reset} startIcon={<RestartAlt />} sx={{ margin: 1.5 }}>
+        <Button
+          variant='outlined'
+          onClick={() => reset()}
+          startIcon={<RestartAlt />}
+          sx={{ margin: 1.5 }}
+        >
           Rejouer
         </Button>
       </Drawer>
@@ -223,24 +243,10 @@ function SettingsMenu() {
   )
 }
 
-export default function GameMenuBar() {
-  const {
-    departementsId,
-    target,
-    guesses,
-    maxGuesses,
-    departements,
-    gameMode,
-    reset,
-    onDepartementClick,
-  } = useGame()
-  const [stats, setStats] = useState<GameStats>()
+function TargetPicker() {
+  const { departementsId, target, gameMode, departements, reset, onDepartementClick } = useGame()
   const [comboValue, setComboValue] = useState<Departement | null>(null)
   const [comboInputValue, setComboInputValue] = useState('')
-
-  useEffect(() => {
-    setStats(computeStats(departements.features.map((f) => f.properties)))
-  }, [departements])
 
   const getLabel = (departement?: Departement) => {
     let label = ''
@@ -251,8 +257,139 @@ export default function GameMenuBar() {
     return label
   }
 
+  const handleOptionClick = (departement: Departement) => () => {
+    onDepartementClick(departement)
+  }
+
+  const optionCodes = useMemo(
+    () =>
+      defaultDepartements.features
+        .filter((feature) => feature.properties.code !== target?.code)
+        .map((feature) => feature.properties.code)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 5),
+    [target],
+  )
+
+  const options = useMemo(
+    () =>
+      target
+        ? departements.features
+            .filter((feature) => optionCodes.includes(feature.properties.code))
+            .map((feature) => feature.properties)
+            .concat([target])
+            .sort((a, b) => a.code.localeCompare(b.code))
+        : [],
+    [optionCodes, departements, target],
+  )
+
   return (
-    <AppBar position='fixed' sx={{ bottom: 0, top: 'auto' }}>
+    <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'center' }}>
+      {target ? (
+        <>
+          {gameMode === GameMode.Point && (
+            <Typography
+              component='div'
+              sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
+            >
+              Cliquez sur le département{' '}
+              <span style={{ fontWeight: 'bold' }}>{getLabel(target)}</span>
+            </Typography>
+          )}
+          {gameMode === GameMode.Name && (
+            <>
+              <Typography
+                component='div'
+                sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
+              >
+                Identifiez le département surligné :
+              </Typography>
+              <Autocomplete
+                autoHighlight
+                options={departements.features
+                  // .filter((feature) => feature.properties.active && !feature.properties.found)
+                  .map((feature) => feature.properties)
+                  .sort((a, b) => a.code.localeCompare(b.code))}
+                getOptionLabel={getLabel}
+                onChange={(_, newValue: Departement | null) => {
+                  if (newValue) {
+                    onDepartementClick(newValue)
+                    setComboValue(null)
+                    setComboInputValue('')
+                  }
+                }}
+                value={comboValue}
+                inputValue={comboInputValue}
+                onInputChange={(_, newInputValue) => {
+                  setComboInputValue(newInputValue)
+                }}
+                sx={{
+                  width: { xs: 200, md: 300 },
+                  color: 'inherit',
+                  '& .MuiInputBase-root': {
+                    bgcolor: 'background.paper',
+                  },
+                  ml: 2,
+                }}
+                size='small'
+                renderInput={(params) => <TextField {...params} />}
+              />
+            </>
+          )}
+          {gameMode === GameMode.Pick && (
+            <>
+              <Typography
+                component='div'
+                sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
+              >
+                Identifiez le département surligné :
+              </Typography>
+              <Stack
+                direction='row'
+                useFlexGap
+                sx={{ maxWidth: 500, flexWrap: 'wrap', my: 1, ml: 1 }}
+                spacing={1}
+              >
+                {options.map((departement) => (
+                  <Button
+                    variant='contained'
+                    key={departement.code}
+                    size='small'
+                    color='secondary'
+                    onClick={handleOptionClick(departement)}
+                    disabled={departement.guess}
+                  >
+                    {getLabel(departement)}
+                  </Button>
+                ))}
+              </Stack>
+            </>
+          )}
+        </>
+      ) : (
+        <Button
+          variant='contained'
+          color='secondary'
+          onClick={() => reset()}
+          startIcon={<RestartAlt />}
+        >
+          Rejouer
+        </Button>
+      )}
+    </Stack>
+  )
+}
+
+export default function GameMenuBar() {
+  const { guesses, maxGuesses, departements } = useGame()
+  const [stats, setStats] = useState<GameStats>()
+
+  useEffect(() => {
+    setStats(computeStats(departements.features.map((f) => f.properties)))
+  }, [departements])
+
+  return (
+    <AppBar position='sticky' sx={{ bottom: 0, top: 'auto' }}>
       <Toolbar
         sx={{
           justifyContent: 'space-between',
@@ -289,87 +426,31 @@ export default function GameMenuBar() {
             </Typography>
           </Stack>
         </Link>
-        <Box sx={{ order: { xs: 1, md: 2 }, flex: { xs: '0 0 100%', md: 'auto' } }}>
-          <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'center' }}>
-            {target ? (
-              <>
-                {gameMode === GameMode.Point ? (
-                  <Typography
-                    component='div'
-                    sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
-                  >
-                    Cliquez sur le département{' '}
-                    <span style={{ fontWeight: 'bold' }}>{getLabel(target)}</span>
-                  </Typography>
-                ) : (
-                  <>
-                    <Typography
-                      component='div'
-                      sx={{ color: 'inherit', typography: { xs: 'caption', md: 'body1' } }}
-                    >
-                      Identifiez le département surligné :
-                    </Typography>
-                    <Autocomplete
-                      autoHighlight
-                      options={departements.features
-                        // .filter((feature) => feature.properties.active && !feature.properties.found)
-                        .map((feature) => feature.properties)
-                        .sort((a, b) => a.code.localeCompare(b.code))}
-                      getOptionLabel={getLabel}
-                      onChange={(_, newValue: Departement | null) => {
-                        if (newValue) {
-                          onDepartementClick(newValue)
-                          setComboValue(null)
-                          setComboInputValue('')
-                        }
-                      }}
-                      value={comboValue}
-                      inputValue={comboInputValue}
-                      onInputChange={(_, newInputValue) => {
-                        setComboInputValue(newInputValue)
-                      }}
-                      sx={{
-                        width: { xs: 200, md: 300 },
-                        color: 'inherit',
-                        '& .MuiInputBase-root': {
-                          bgcolor: 'background.paper',
-                        },
-                        ml: 2,
-                      }}
-                      size='small'
-                      renderInput={(params) => <TextField {...params} />}
-                    />
-                  </>
-                )}
-                <Tooltip
-                  title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
-                  sx={{ ml: 2 }}
-                >
-                  <Chip
-                    icon={<AdsClick />}
-                    label={maxGuesses - guesses + 1}
-                    color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
-                    size='small'
-                  />
-                </Tooltip>
-              </>
-            ) : (
-              <Button
-                variant='contained'
-                color='secondary'
-                onClick={reset}
-                startIcon={<RestartAlt />}
-              >
-                Rejouer
-              </Button>
-            )}
-          </Stack>
+        <Box
+          sx={{
+            order: { xs: 1, md: 2 },
+            flex: { xs: '0 0 100%', md: 'auto' },
+            mb: { xs: 1, md: 0 },
+          }}
+        >
+          <TargetPicker />
         </Box>
 
         <Stack
           direction='row'
           sx={{ justifyContent: 'end', alignItems: 'center', order: { xs: 2, md: 3 } }}
         >
+          <Tooltip
+            title={`${maxGuesses - guesses + 1} essai${maxGuesses - guesses + 1 >= 2 ? 's' : ''} restant`}
+            sx={{ mr: 1 }}
+          >
+            <Chip
+              icon={<AdsClick />}
+              label={maxGuesses - guesses + 1}
+              color={guesses === 1 ? 'success' : guesses === 2 ? 'warning' : 'error'}
+              size='small'
+            />
+          </Tooltip>
           <GameStatsDisplay stats={stats} maxGuesses={maxGuesses} sx={{ mr: 1 }} />
           <SettingsMenu />
         </Stack>

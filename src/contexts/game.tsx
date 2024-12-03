@@ -10,18 +10,10 @@ import {
   useState,
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import departementsGeoJson from '../assets/departements.geojson?raw'
 import { Departement, DepartementId, GameMode, MapVisibility } from '../types'
-import { saveGameHistory } from '../utils'
+import { loadDefaultDepartments, saveGameHistory } from '../utils'
 
-const defaultDepartements = JSON.parse(departementsGeoJson) as FeatureCollection<
-  Polygon,
-  Departement
->
-defaultDepartements.features.forEach((feature) => {
-  feature.properties.found = 0
-  feature.properties.active = true
-})
+const defaultDepartements = loadDefaultDepartments()
 
 const shuffleDepartements = (nbTargets: number) => {
   defaultDepartements.features.sort(() => 0.5 - Math.random())

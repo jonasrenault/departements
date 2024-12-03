@@ -37,6 +37,7 @@ export type GameStats = {
 export enum GameMode {
   Point,
   Name,
+  Pick,
 }
 
 export type GameHistory = {

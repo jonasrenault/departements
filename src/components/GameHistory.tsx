@@ -1,4 +1,4 @@
-import { AdsClick, EditNote } from '@mui/icons-material'
+import { AdsClick, EditNote, Share } from '@mui/icons-material'
 import { Chip, Tooltip, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { GameMode } from '../types'
@@ -35,8 +35,22 @@ export default function GameHistory() {
             <Grid size={2} display='flex' justifyContent='center' alignItems='center'>
               <Tooltip title='Mode de jeu'>
                 <Chip
-                  icon={gameHistory.mode === GameMode.Point ? <AdsClick /> : <EditNote />}
-                  label={gameHistory.mode === GameMode.Point ? 'Pointer' : 'Nommer'}
+                  icon={
+                    gameHistory.mode === GameMode.Point ? (
+                      <AdsClick />
+                    ) : gameHistory.mode === GameMode.Name ? (
+                      <EditNote />
+                    ) : (
+                      <Share />
+                    )
+                  }
+                  label={
+                    gameHistory.mode === GameMode.Point
+                      ? 'Pointer'
+                      : gameHistory.mode === GameMode.Name
+                        ? 'Nommer'
+                        : 'Choisir'
+                  }
                   variant='outlined'
                   color='primary'
                   size='small'
